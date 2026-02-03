@@ -1,7 +1,6 @@
 # thesis2 (tempname)
 
-** thesis2 (tempname)** is a system that takes an event log and outputs a compressed file using poset covers which can be decompressed.
-
+**thesis2 (tempname)** is a system that takes an event log and outputs a compressed file using poset covers which can be decompressed.
 
 # MVP Pipeline
 The minimum viable product for this project is achieved through the following pipeline:
