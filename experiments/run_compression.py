@@ -13,5 +13,9 @@ event_log = load_log_from_list(toy_log)
 candidate_posets = mine_candidate_posets(event_log)
 dictionary, reverse_dictionary = build_dictionary(candidate_posets)
 
-encoded_traces = encode_traces(log, dictionary)
-encode_to_json(dictionary, encoded_traces, "data/compressed/toy_log.json")
+encoded_traces = encode_traces(toy_log, dictionary)
+
+print(dictionary.items())
+# print(encoded_traces)
+
+# encode_to_json(dictionary, encoded_traces, "data/compressed/toy_log.json")

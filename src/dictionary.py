@@ -6,7 +6,7 @@ def build_dictionary(candidate_posets):
     reverse_dictionary = {}
 
     for po in candidate_posets:
-        sig = po.signature(po)
+        sig = po.signature()
         if sig not in dictionary:
             idx = len(dictionary)
             dictionary[sig] = idx

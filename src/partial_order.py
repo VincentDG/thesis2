@@ -9,6 +9,17 @@ class PartialOrder:
     def add_order(self, a, b):
         self.edges.add((a, b))
 
+    def signature(self):
+        """
+        Returns a hashable canonical representation of the poset.
+        Used for dictionary construction and equivalence testing.
+        """
+        return(
+            frozenset(self.nodes),
+            frozenset(self.edges)
+        )
+
+
 def trace_to_po(trace):
     po = PartialOrder()
     for e in trace:

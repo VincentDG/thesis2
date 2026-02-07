@@ -32,7 +32,7 @@ def encode_to_json(dictionary, encoded_traces, path):
         "traces": encoded_traces
     }
 
-    for pid, po in dictionary.items():
+    for po, pid in dictionary.items():
         json_dict["dictionary"][pid] = {
             "nodes": list(po.nodes),
             "edges": list([a, b] for a, b in po.edges)
