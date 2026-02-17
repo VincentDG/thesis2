@@ -2,6 +2,7 @@ import gzip
 import shutil
 import os
 import re
+from checker import detect_exclusive_choices
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -74,3 +75,9 @@ for trace in events:
         events_metadata.append(metadata)
 
     trace_events_metadata.append(events_metadata)
+
+for trace in trace_events_metadata[0]:
+    print(trace)
+    
+exclusive_pairs = detect_exclusive_choices(trace_events_metadata)
+print("Exclusive choices:", exclusive_pairs)
