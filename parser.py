@@ -43,4 +43,24 @@ for trace in traces:
         event_log.append(trace[start:i])
         trace = trace[i:]
     events.append(event_log)
-print(events[0])
+
+# This section of the code loops through each event to extract its name and timestamp
+trace_metadata = []
+for trace in events:
+    events_metadata = []
+    for event in trace:
+        # extracting name
+        x = re.search("string key=\"concept:name\" value=\"", event)
+        name_end = re.search("\"/>", event[x.end():])
+        event_name = event[x.end():name_end.start()]
+    
+        # extracting timestamp
+        x = re.search("date key=\"time:timestamp\" value=\"", event)
+        date_end = re.search("\"/>", event[x.start():])
+        event_date = event[x.end():date_end.start()]
+
+        metadata = [event_name, event_date]
+        events_metadata.append(metadata)
+    trace_metadata.append(events_metadata)
+
+print(len(trace_metadata[0]))
