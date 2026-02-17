@@ -30,6 +30,15 @@ while re.search("<trace>", contents):
     traces.append(contents[start:i])
     contents = contents[i:]
 
+# This section of the code looks through each trace to extract its name and saves it to an array
+trace_metadata = []
+for trace in traces:
+    x = re.search("string key=\"concept:name\" value=\"", trace)
+    x_end = x.end()
+    name_end = re.search("\"/>", trace[x_end:])
+    trace_name = trace[x_end:x_end + name_end.start()]
+    trace_metadata.append(trace_name)
+
 # This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
 events = []
 for trace in traces:
@@ -44,23 +53,24 @@ for trace in traces:
         trace = trace[i:]
     events.append(event_log)
 
-# This section of the code loops through each event to extract its name and timestamp
-trace_metadata = []
+# This section of the code extracts the name and timestamp of each event and saves it as a pair in an array
+trace_events_metadata = []
 for trace in events:
     events_metadata = []
     for event in trace:
         # extracting name
         x = re.search("string key=\"concept:name\" value=\"", event)
-        name_end = re.search("\"/>", event[x.end():])
-        event_name = event[x.end():name_end.start()]
-    
+        x_end = x.end()
+        name_end = re.search("\"/>", event[x_end:])
+        event_name = event[x_end:x_end + name_end.start()]
+
         # extracting timestamp
         x = re.search("date key=\"time:timestamp\" value=\"", event)
-        date_end = re.search("\"/>", event[x.start():])
-        event_date = event[x.end():date_end.start()]
+        x_end = x.end()
+        date_end = re.search("\"/>", event[x_end:])
+        event_date = event[x_end:x_end + date_end.start()]
 
         metadata = [event_name, event_date]
         events_metadata.append(metadata)
-    trace_metadata.append(events_metadata)
 
-print(len(trace_metadata[0]))
+    trace_events_metadata.append(events_metadata)
