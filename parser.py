@@ -97,7 +97,7 @@ dt_traces = []
 for trace in nl_traces:
     events = []
     for event in trace:
-        date_object = dt.strptime(event[1][:-6], date_format)
+        date_object = dt.strptime(event[1][:-6], date_format) #make sure this works for other datasets
         new_event = [event[0], date_object]
         events.append(new_event)
     dt_traces.append(events)
