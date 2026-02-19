@@ -2,6 +2,8 @@ import gzip
 import shutil
 import os
 import re
+from datetime import datetime as dt
+import random
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -74,3 +76,17 @@ for trace in events:
         events_metadata.append(metadata)
 
     trace_events_metadata.append(events_metadata)
+
+# This section of the code checks for duplicate events (looping)
+# nl means No Loops
+nl_traces = []
+for trace in trace_events_metadata:
+    seen = set()
+    for event in trace:
+        if event[0] not in seen:
+            seen.add(event[0])
+        else:
+            break
+    if len(seen) == len(trace):
+        nl_traces.append(trace)
+
