@@ -90,3 +90,23 @@ for trace in trace_events_metadata:
     if len(seen) == len(trace):
         nl_traces.append(trace)
 
+# This section of the code formats the timestamp into a manipulable object
+# dt means datetime 
+date_format = "%Y-%m-%dT%H:%M:%S.%f"
+dt_traces = []
+for trace in nl_traces:
+    events = []
+    for event in trace:
+        date_object = dt.strptime(event[1][:-6], date_format)
+        new_event = [event[0], date_object]
+        events.append(new_event)
+    dt_traces.append(events)
+
+# This section of the code sorts the events of each trace in chronological order
+# co means Chronologically Ordered
+co_traces = []
+for trace in dt_traces:
+    co_events = sorted(trace, key = lambda event:event[1])
+    co_traces.append(co_events)
+
+# REMEMBER: check for concurrent events
