@@ -65,16 +65,13 @@ for trace in events:
         x_end = x.end()
         name_end = re.search("\"/>", event[x_end:])
         event_name = event[x_end:x_end + name_end.start()]
-
         # extracting timestamp
         x = re.search("date key=\"time:timestamp\" value=\"", event)
         x_end = x.end()
         date_end = re.search("\"/>", event[x_end:])
         event_date = event[x_end:x_end + date_end.start()]
-
         metadata = [event_name, event_date]
         events_metadata.append(metadata)
-
     trace_events_metadata.append(events_metadata)
 
 # This section of the code checks for duplicate events (looping)
@@ -90,3 +87,23 @@ for trace in trace_events_metadata:
     if len(seen) == len(trace):
         nl_traces.append(trace)
 
+# This section groups traces via the set of events they have
+# grp means Grouped
+event_sets = []
+grp_traces = []
+for trace in nl_traces:
+    event_names = set()
+    for event in trace:
+        event_names.add(event[0])
+    if event_names not in event_sets:
+        event_sets.append(event_names)
+        grp_traces.append([trace])
+    else:
+        for x in event_sets:
+            if event_names == x:
+                grp_traces[event_sets.index(x)].append(trace)
+
+# This section of the code chronologically orders events in a timestamp
+
+# This section of the code checks for concurrent events
+# If concurrency is detected between events, two linear orders are created
