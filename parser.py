@@ -99,19 +99,12 @@ for trace in nl_traces:
         events.append(new_event)
     dt_traces.append(events)
 
-# This section of the code sorts the events of each trace in chronological order
-# co means Chronologically Ordered
-co_traces = []
-for trace in dt_traces:
-    co_events = sorted(trace, key = lambda event:event[1])
-    co_traces.append(co_events)
-
 # REMEMBER: check for concurrent events
 # This section groups traces via the set of events they have
 # grp means Grouped
 event_sets = []
 grp_traces = []
-for trace in nl_traces:
+for trace in dt_traces:
     event_names = set()
     for event in trace:
         event_names.add(event[0])
@@ -123,7 +116,24 @@ for trace in nl_traces:
             if event_names == x:
                 grp_traces[event_sets.index(x)].append(trace)
 
-# This section of the code chronologically orders events in a timestamp
+# This section of the code sorts the events of each trace in chronological order
+# co means Chronologically Ordered
+co_grp_traces = []
+for grp in grp_traces:
+    co_traces = []
+    for trace in grp:
+        co_events = sorted(trace, key = lambda event:event[1])
+        co_traces.append(co_events)
+    co_grp_traces.append(co_traces)
 
 # This section of the code checks for concurrent events
+# Detect concurrency by checking if timestamp is equivalent
 # If concurrency is detected between events, two linear orders are created
+concurrency_list = []
+for grp in grp_traces:
+    for trace in grp:
+        for x in range(len(trace)-1):
+            for y in range(x+1, len(trace)):
+                if trace[x][1] == trace[y][1]:
+                    # Format: [grp_index, trace_index, event_index_1, event_index_2]
+                    concurrency_list.append([grp_traces.index(grp), grp.index(trace), x, y])
