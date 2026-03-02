@@ -2,8 +2,10 @@ import gzip
 import shutil
 import os
 import re
+from checker import detect_exclusive_choices
 from datetime import datetime as dt
 import random
+import utilities
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -87,6 +89,11 @@ for trace in trace_events_metadata:
     if len(seen) == len(trace):
         nl_traces.append(trace)
 
+# print("No. of traces with no loops:", len(nl_traces))
+# print("No. of traces:", len(trace_events_metadata))
+# for activity in nl_traces[0]:
+#     print(activity)
+
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
 date_format = "%Y-%m-%dT%H:%M:%S.%f"
@@ -98,6 +105,7 @@ for trace in nl_traces:
         new_event = [event[0], date_object]
         events.append(new_event)
     dt_traces.append(events)
+
 
 # REMEMBER: check for concurrent events
 # This section groups traces via the set of events they have
@@ -116,6 +124,9 @@ for trace in dt_traces:
             if event_names == x:
                 grp_traces[event_sets.index(x)].append(trace)
 
+# utilities.event_sets_summary(event_sets)
+# utilities.grp_traces_summary(grp_traces)
+
 # This section of the code sorts the events of each trace in chronological order
 # co means Chronologically Ordered
 co_grp_traces = []
@@ -126,14 +137,52 @@ for grp in grp_traces:
         co_traces.append(co_events)
     co_grp_traces.append(co_traces)
 
+# utilities.co_grp_summary(co_grp_traces)
+
+# This section populates the event dictionary
+event_dict = {}
+event_idx = 0
+for group in co_grp_traces:
+    for trace in group:
+        for event in trace:
+            if event[0] not in event_dict:
+                event_dict[event[0]] = event_idx
+                event_idx += 1
+
+utilities.event_dict_summary(event_dict)
+
 # This section of the code checks for concurrent events
 # Detect concurrency by checking if timestamp is equivalent
 # If concurrency is detected between events, two linear orders are created
 concurrency_list = []
-for grp in grp_traces:
+for grp in co_grp_traces:
     for trace in grp:
         for x in range(len(trace)-1):
             for y in range(x+1, len(trace)):
                 if trace[x][1] == trace[y][1]:
                     # Format: [grp_index, trace_index, event_index_1, event_index_2]
-                    concurrency_list.append([grp_traces.index(grp), grp.index(trace), x, y])
+                    concurrency_list.append([co_grp_traces.index(grp), grp.index(trace), x, y])
+
+
+utilities.concurrency_list_summary(concurrency_list)
+
+
+# This section creates the linear orders from the co_grp_traces, event_dict and concurrency_list
+linear_orders = []
+grouped_linear_orders = []
+for group in co_grp_traces:
+    for trace in group:
+        linear_order = []
+        for event in trace:
+            event_number = event_dict[event[0]]
+            linear_order.append(event_number)
+        linear_orders.append(linear_order)    
+    grouped_linear_orders.append(linear_orders)
+
+
+# utilities.linear_order_summary(linear_orders)
+
+utilities.concurrent_event_checker(event_dict, concurrency_list, co_grp_traces, grouped_linear_orders)
+
+# I want to make the additional linear orders based on what's valid first.
+
