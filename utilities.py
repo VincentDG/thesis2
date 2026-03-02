@@ -18,22 +18,29 @@ def grp_traces_summary(grp_traces):
 
     print("Number of recorded events:", sum)
 
-
 def co_grp_summary(co_grp_traces):
     print("---")
     print("Chronologically Ordered Groups:")
-    trace_no = 0
+    group_no = 0
     for group in co_grp_traces:
-        for trace in group:
-            print(" "*2, trace_no + 1)
-            for event in trace:
-                print(" "*4, event[0])
-            trace_no += 1
+        print(" "*2, "Group no:", group_no + 1)
+        # trace_no = 0
+        # for trace in group:
+            # print(" "*4, "Trace no:", trace_no + 1)
+            # for event in trace:
+            #     print(" "*6, event[0])
+        #     trace_no += 1
 
-            if trace_no >= BREAK_NO:
-                break
-        if trace_no >= BREAK_NO:
-            break
+        #     if trace_no >= BREAK_NO:
+        #         print(" "*6, "...", len(group) - BREAK_NO, "more entries")
+        #         break
+        print(" "*6, "Traces in group: ", len(group))
+        print(" "*2, "------")
+        group_no += 1
+        
+        # if trace_no >= BREAK_NO:
+        #     break
+    print("No. of chronologically ordered groups:", len(co_grp_traces))
 
 def event_dict_summary(event_dict):
     print("---")
@@ -79,9 +86,8 @@ def concurrent_event_checker(event_dict, concurrency_list, co_grp_traces, groupe
 
 
 
-        if concurrency_no >= BREAK_NO:
-            break
-
+        # if concurrency_no >= BREAK_NO:
+        #     break
 
 def concurrency_list_summary(concurrency_list):
     print("---")
@@ -94,10 +100,10 @@ def concurrency_list_summary(concurrency_list):
         concurrency_no += 1
 
         if concurrency_no >= BREAK_NO:
+            print(" "*4, "...", len(concurrency_list) - BREAK_NO, "more concurrencies")
             break
     
     print("Number of concurrencies: ", len(concurrency_list))
-
 
 def linear_order_summary(linear_orders):
     print("---")
@@ -111,3 +117,36 @@ def linear_order_summary(linear_orders):
             break
 
     print("Number of linear orders: ", len(linear_orders))
+
+def grouped_linear_order_summary(grouped_linear_orders):
+    print("---")
+    print("Grouped Linear Orders")
+    print("Number of linear order groups: ", len(grouped_linear_orders))
+    group_no = 0
+    valid_count = 0
+    for group in grouped_linear_orders:
+        print(" "*2, "Group no:", group_no)
+        linear_order_no = 0
+        for linear_order in group:
+            print(" "*4, linear_order)
+            linear_order_no += 1
+            if linear_order_no >= BREAK_NO:
+                print(" "*4, "...", len(group) - BREAK_NO, "more entries")
+                break
+        print(" "*2, "Number of ")
+        trace = group[0]
+        if len(trace) >= 2 and len(trace) <= 6:
+            valid_count += 1
+
+        print(" "*6, "Traces in group: ", len(group))
+        print(" "*6, "Number of events in group: ", len(group[0]))
+        print(" "*2, "------")
+        group_no +=1
+    print("No. of chronologically ordered groups:", len(grouped_linear_orders))
+    print("Number of valid groups: ", valid_count)
+
+    
+
+        
+
+
