@@ -7,6 +7,9 @@ from datetime import datetime as dt
 import random
 import utilities
 from itertools import permutations
+from imports.app.posetsolver import PosetSolver
+from imports.app.posetutils import PosetUtils
+
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -147,7 +150,7 @@ for group in co_grp_traces:
     for trace in group:
         for event in trace:
             if event[0] not in event_dict:
-                event_dict[event[0]] = event_idx
+                event_dict[event[0]] = event_idx 
                 event_idx += 1
 
 # utilities.event_dict_summary(event_dict)
@@ -187,14 +190,14 @@ for group in co_grp_traces:
 
 # utilities.concurrent_event_checker(event_dict, concurrency_list, co_grp_traces, grouped_linear_orders)
 
-utilities.grouped_linear_order_summary(grouped_linear_orders)
+# utilities.grouped_linear_order_summary(grouped_linear_orders)
 
 # This section removes all the groups that cannot be used as input to the ATG visualizer.
 # Note that this section should be removed once the poset cover algorithm has been extended.
 # valid_lo_groups = []
 # for group in grouped_linear_orders:
 #     trace = group[0]
-#     if len(trace) >= 2 and len(trace) <= 6:
+#     if len(trace) >= 2 and len(trace) <= 9:
 #         valid_lo_groups.append(group)
 
 # utilities.grouped_linear_order_summary(valid_lo_groups)
@@ -229,24 +232,14 @@ c_no = 0
 for concurrency in concurrency_list:
     grp_no, trace_no, indices = concurrency[0], concurrency[1], concurrency[2]
     linear_order = grouped_linear_orders[grp_no][trace_no]
-    # print("Concurrency no: ", c_no)
-    # print(" " * 2, "Linear Order: ", grouped_linear_orders[grp_no][trace_no])
-    # print(" " * 2, "Indices: ", indices)
     concurrent_events = []
     for c_index in indices:
         event_no = linear_order[c_index]
-        # print(" "*2, "Concurrent event: ", event_no)
         concurrent_events.append(event_no)
-    
-    # print(" " * 2, "Concurrent events: ", concurrent_events )
     
     # Generate permutations
     p = list(permutations(concurrent_events))
-    # print(" " * 4, "Permutations of Current Events: ")
-
-    # Transfer to utilities later
-    # for permutation in p:
-    #     print(" " * 6, permutation)
+    # utilities.permutation_summary(p)
 
     # Insert permutations to linear orders
     linear_extensions = []
@@ -257,18 +250,44 @@ for concurrency in concurrency_list:
         linear_extensions.append(new_order)
     
     grp = grouped_linear_orders[grp_no]
+    # utilities.linear_extension_summary(linear_extensions)
 
-    # Transfer to utilities later
-    # print(" "*4, "Linear Extensions:")
+    # Insert to group
     for extension in linear_extensions:
-        # print(" "*6, extension)
-
-        # Insert to group
         grp.append(extension)
 
     c_no += 1
 
 
-# Prepare inputs to ATG visualizer
+# utilities.concurrency_mapping_summary(concurrency_list, grouped_linear_orders)
+# utilities.grouped_linear_order_summary(grouped_linear_orders)
 
-utilities.grouped_linear_order_summary(grouped_linear_orders)
+lo_strings = []
+for group in grouped_linear_orders:
+    string_grp = []
+
+    for linear_order in group:
+
+        if any(event_no >= 9 for event_no in linear_order):
+            continue
+
+        string = ''.join([str(event_no) for event_no in linear_order])
+        string_grp.append(string)
+    
+    if string_grp:
+        lo_strings.append(string_grp)
+
+# utilities.lo_strings_summary(lo_strings)
+
+# utilities.output_upsilon(lo_strings)
+
+# Test
+
+for string_group in lo_strings:
+    upsilon = string_grp
+    result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
+    result_posets = [
+        PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
+    ]
+
+    print(result_posets)

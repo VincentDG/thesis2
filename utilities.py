@@ -146,7 +146,55 @@ def grouped_linear_order_summary(grouped_linear_orders):
     print("Number of valid groups: ", valid_count)
 
     
+def concurrency_mapping_summary(concurrency_list, grouped_linear_orders):
+    c_no = 0
+    for concurrency in concurrency_list:
+        grp_no, trace_no, indices = concurrency[0], concurrency[1], concurrency[2]
+        linear_order = grouped_linear_orders[grp_no][trace_no]
+        concurrent_events = []
+        print("Concurrency no: ", c_no)
+        print(" " * 2, "Linear Order: ", grouped_linear_orders[grp_no][trace_no])
+        print(" " * 2, "Indices: ", indices)
+    
+        for c_index in indices:
+            event_no = linear_order[c_index]
+            print(" "*2, "Concurrent event: ", event_no)
+            concurrent_events.append(event_no)
 
-        
+        print(" " * 2, "Concurrent events: ", concurrent_events )
+
+def permutation_summary(p):
+    print(" " * 4, "Permutations of Current Events: ")
+
+    for permutation in p:
+        print(" " * 6, permutation)
+
+def linear_extension_summary(linear_extensions):
+    print(" "*4, "Linear Extensions:")
+    for extension in linear_extensions:
+        print(" "*6, extension)
+
+def lo_strings_summary(lo_strings):
+    print(" "*4, "Linear Order Strings")
+    
+    g = 0
+    for grp in lo_strings:
+        c = 0
+        print(" "*2, "Group no: ", g)
+        for s in grp:
+            print(" "*4, s)
+            if c >= BREAK_NO:
+                print(" "*6, "...", len(grp)-BREAK_NO, "more entries")
+                break
+            c += 1
+        # if g >= BREAK_NO:
+        #     print(" "*2, "...", len(lo_strings)-BREAK_NO, "more groups")
+        #     break
+        g += 1
 
 
+def output_upsilon(lo_strings):
+    for grp in lo_strings:
+        for s in grp:
+            print(s)
+        print()
