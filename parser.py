@@ -271,23 +271,28 @@ for group in grouped_linear_orders:
         if any(event_no >= 9 for event_no in linear_order):
             continue
 
-        string = ''.join([str(event_no) for event_no in linear_order])
+        string = ''.join([str(event_no + 1) for event_no in linear_order])
         string_grp.append(string)
     
     if string_grp:
         lo_strings.append(string_grp)
 
-# utilities.lo_strings_summary(lo_strings)
-
-# utilities.output_upsilon(lo_strings)
+utilities.lo_strings_summary(lo_strings)
 
 # Test
-
+print()
+string_group_no = 0
 for string_group in lo_strings:
-    upsilon = string_grp
+    upsilon = string_group
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
     result_posets = [
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
 
-    print(result_posets)
+    print("Posets for string group no: ", string_group_no)
+    poset_number = 0
+    for poset in result_posets:
+        print(" "*2, "Poset number: ", poset_number)
+        print(" "*4, poset)
+        poset_number += 1
+    string_group_no += 1
