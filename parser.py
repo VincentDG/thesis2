@@ -137,3 +137,26 @@ for grp in grp_traces:
                 if trace[x][1] == trace[y][1]:
                     # Format: [grp_index, trace_index, event_index_1, event_index_2]
                     concurrency_list.append([grp_traces.index(grp), grp.index(trace), x, y])
+
+
+### this part goes after the PR arvin made
+### this part is indented as it is intended to be placed within the for loop iterating over lo_strings
+
+    ## This section of the code gets the Hasse diagram of each poset in the poset cover
+    hasse_posets = [
+        PosetUtils.get_hasse_from_partial_order(poset) for poset in result_posets
+    ]
+
+    ## This section of the code represents each Hasse diagram as an adjacency matrix, represented via an array of int lists
+    ## The adjacency matrices are then stored to a list
+    ## The rows and columns of the adjacency matrix represent the nodes of the poset
+    ## A value of 1 in a cell (A-1, B-1) of the adjacency matrix means that there is an edge going from Node A to Node B
+    # -1 because the edges operate on 1-indexing, which isn't the case for arrays
+    
+    k = 10 # k is set to 10 as it is the current max length of linear orders, can be modified to be length of event_dict
+    adj_matrix_list = []
+    for poset in hasse_posets:
+        adj_matrix = [[0]*k]*k
+        for edge in poset.edges:
+            adj_matrix[edge[0]-1][edge[1]-1] = 1 
+        adj_matrix_list.append(adj_matrix)    
