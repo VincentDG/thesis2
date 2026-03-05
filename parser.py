@@ -2,8 +2,14 @@ import gzip
 import shutil
 import os
 import re
+from checker import detect_exclusive_choices
 from datetime import datetime as dt
 import random
+import utilities
+from itertools import permutations
+from imports.app.posetsolver import PosetSolver
+from imports.app.posetutils import PosetUtils
+
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -87,6 +93,11 @@ for trace in trace_events_metadata:
     if len(seen) == len(trace):
         nl_traces.append(trace)
 
+# print("No. of traces with no loops:", len(nl_traces))
+# print("No. of traces:", len(trace_events_metadata))
+# for activity in nl_traces[0]:
+#     print(activity)
+
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
 date_format = "%Y-%m-%dT%H:%M:%S.%f"
@@ -98,6 +109,7 @@ for trace in nl_traces:
         new_event = [event[0], date_object]
         events.append(new_event)
     dt_traces.append(events)
+
 
 # REMEMBER: check for concurrent events
 # This section groups traces via the set of events they have
@@ -116,6 +128,9 @@ for trace in dt_traces:
             if event_names == x:
                 grp_traces[event_sets.index(x)].append(trace)
 
+# utilities.event_sets_summary(event_sets)
+# utilities.grp_traces_summary(grp_traces)
+
 # This section of the code sorts the events of each trace in chronological order
 # co means Chronologically Ordered
 co_grp_traces = []
@@ -126,37 +141,158 @@ for grp in grp_traces:
         co_traces.append(co_events)
     co_grp_traces.append(co_traces)
 
+# utilities.co_grp_summary(co_grp_traces)
+
+# This section populates the event dictionary
+event_dict = {}
+event_idx = 0
+for group in co_grp_traces:
+    for trace in group:
+        for event in trace:
+            if event[0] not in event_dict:
+                event_dict[event[0]] = event_idx 
+                event_idx += 1
+
+# utilities.event_dict_summary(event_dict)
+
+
 # This section of the code checks for concurrent events
 # Detect concurrency by checking if timestamp is equivalent
 # If concurrency is detected between events, two linear orders are created
+# concurrency_list = []
+# for grp in co_grp_traces:
+#     for trace in grp:
+#         for x in range(len(trace)-1):
+#             for y in range(x+1, len(trace)):
+#                 if trace[x][1] == trace[y][1]:
+#                     # Format: [grp_index, trace_index, event_index_1, event_index_2]
+#                     concurrency_list.append([co_grp_traces.index(grp), grp.index(trace), x, y])
+
+# # ---
+
+# utilities.concurrency_list_summary(concurrency_list)
+
+
+# This section creates the linear orders from the co_grp_traces, event_dict and concurrency_list
+grouped_linear_orders = []
+for group in co_grp_traces:
+    linear_orders = []
+    for trace in group:
+        linear_order = []
+        for event in trace:
+            event_number = event_dict[event[0]]
+            linear_order.append(event_number)
+        linear_orders.append(linear_order)    
+    grouped_linear_orders.append(linear_orders)
+
+
+# utilities.linear_order_summary(linear_orders)
+
+# utilities.concurrent_event_checker(event_dict, concurrency_list, co_grp_traces, grouped_linear_orders)
+
+# utilities.grouped_linear_order_summary(grouped_linear_orders)
+
+# This section removes all the groups that cannot be used as input to the ATG visualizer.
+# Note that this section should be removed once the poset cover algorithm has been extended.
+# valid_lo_groups = []
+# for group in grouped_linear_orders:
+#     trace = group[0]
+#     if len(trace) >= 2 and len(trace) <= 9:
+#         valid_lo_groups.append(group)
+
+# utilities.grouped_linear_order_summary(valid_lo_groups)
+
+# This section of the code checks for concurrent events
+# Detect concurrency by checking if timestamp is equivalent
+# New concurrency algorithm puts them in a blocks instead of pairwise
+
 concurrency_list = []
-for grp in grp_traces:
-    for trace in grp:
-        for x in range(len(trace)-1):
-            for y in range(x+1, len(trace)):
-                if trace[x][1] == trace[y][1]:
-                    # Format: [grp_index, trace_index, event_index_1, event_index_2]
-                    concurrency_list.append([grp_traces.index(grp), grp.index(trace), x, y])
+
+for grp_no in range(len(co_grp_traces)):
+    curr_grp = co_grp_traces[grp_no]
+    for trace_no in range(len(curr_grp)):
+        current_block = [0]
+        trace = co_grp_traces[grp_no][trace_no]
+
+        for i in range(1, len(trace)):
+            if trace[i][1] == trace[i-1][1]:
+                current_block.append(i)
+            else:
+                if len(current_block) > 1:
+                    concurrency_list.append([grp_no, trace_no, current_block])
+                current_block = [i]
+        
+        if len(current_block) > 1:
+            concurrency_list.append([grp_no, trace_no, current_block])
+
+# utilities.concurrency_list_summary(concurrency_list)
+
+# Map index from concurrency list to its actual event
+c_no = 0
+for concurrency in concurrency_list:
+    grp_no, trace_no, indices = concurrency[0], concurrency[1], concurrency[2]
+    linear_order = grouped_linear_orders[grp_no][trace_no]
+    concurrent_events = []
+    for c_index in indices:
+        event_no = linear_order[c_index]
+        concurrent_events.append(event_no)
+    
+    # Generate permutations
+    p = list(permutations(concurrent_events))
+    # utilities.permutation_summary(p)
+
+    # Insert permutations to linear orders
+    linear_extensions = []
+    for permutation in p:
+        new_order = linear_order.copy()
+        for idx, val in zip(indices, permutation):
+            new_order[idx] = val
+        linear_extensions.append(new_order)
+    
+    grp = grouped_linear_orders[grp_no]
+    # utilities.linear_extension_summary(linear_extensions)
+
+    # Insert to group
+    for extension in linear_extensions:
+        grp.append(extension)
+
+    c_no += 1
 
 
-### this part goes after the PR arvin made
-### this part is indented as it is intended to be placed within the for loop iterating over lo_strings
+# utilities.concurrency_mapping_summary(concurrency_list, grouped_linear_orders)
+# utilities.grouped_linear_order_summary(grouped_linear_orders)
 
-    ## This section of the code gets the Hasse diagram of each poset in the poset cover
-    hasse_posets = [
-        PosetUtils.get_hasse_from_partial_order(poset) for poset in result_posets
+lo_strings = []
+for group in grouped_linear_orders:
+    string_grp = []
+
+    for linear_order in group:
+
+        if any(event_no >= 9 for event_no in linear_order):
+            continue
+
+        string = ''.join([str(event_no + 1) for event_no in linear_order])
+        string_grp.append(string)
+    
+    if string_grp:
+        lo_strings.append(string_grp)
+
+utilities.lo_strings_summary(lo_strings)
+
+# Test
+print()
+string_group_no = 0
+for string_group in lo_strings:
+    upsilon = string_group
+    result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
+    result_posets = [
+        PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
 
-    ## This section of the code represents each Hasse diagram as an adjacency matrix, represented via an array of int lists
-    ## The adjacency matrices are then stored to a list
-    ## The rows and columns of the adjacency matrix represent the nodes of the poset
-    ## A value of 1 in a cell (A-1, B-1) of the adjacency matrix means that there is an edge going from Node A to Node B
-    # -1 because the edges operate on 1-indexing, which isn't the case for arrays
-    
-    k = 10 # k is set to 10 as it is the current max length of linear orders, can be modified to be length of event_dict
-    adj_matrix_list = []
-    for poset in hasse_posets:
-        adj_matrix = [[0]*k]*k
-        for edge in poset.edges:
-            adj_matrix[edge[0]-1][edge[1]-1] = 1 
-        adj_matrix_list.append(adj_matrix)    
+    print("Posets for string group no: ", string_group_no)
+    poset_number = 0
+    for poset in result_posets:
+        print(" "*2, "Poset number: ", poset_number)
+        print(" "*4, poset)
+        poset_number += 1
+    string_group_no += 1
