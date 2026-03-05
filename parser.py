@@ -277,11 +277,29 @@ for group in grouped_linear_orders:
     if string_grp:
         lo_strings.append(string_grp)
 
-utilities.lo_strings_summary(lo_strings)
+# This section of the code is for printing and testing outputs
+def print_adj_matrix(
+    adj_matrix: list[list[int]]
+):
+    for row in adj_matrix:
+        print(" "*4, row)
 
-# Test
-print()
-string_group_no = 0
+def print_poset_cover(
+    poset_cover: list[list[list[int]]]
+):
+    for i in range(len(poset_cover)):
+        print(" "*2, "Poset number: ", i)
+        print_adj_matrix(poset_cover[i])
+
+def print_string_group(
+    master_list: list[list[list[list[int]]]]  #check how to define classes later
+):
+    for i in range(len(master_list)):
+        print("Posets for string group no: ", i)
+        print_poset_cover(master_list[i])
+
+# This section of the code is for solving each instance of the poset cover problem
+adj_matrix_master_list = []
 for string_group in lo_strings:
     upsilon = string_group
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
@@ -289,10 +307,25 @@ for string_group in lo_strings:
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
 
-    print("Posets for string group no: ", string_group_no)
-    poset_number = 0
+    ## This section of the code gets the Hasse diagram of each poset in the poset cover
+    hasse_posets = []
     for poset in result_posets:
-        print(" "*2, "Poset number: ", poset_number)
-        print(" "*4, poset)
-        poset_number += 1
-    string_group_no += 1
+        hasse = PosetUtils.get_hasse_from_partial_order(poset, string_group[0])
+        hasse_posets.append(hasse)
+
+    ## This section of the code represents each Hasse diagram as an adjacency matrix, represented via an array of int lists
+    ## The adjacency matrices are then stored to a list
+    ## The rows and columns of the adjacency matrix represent the nodes of the poset
+    ## A value of 1 in a cell (A-1, B-1) of the adjacency matrix means that there is an edge going from Node A to Node B
+    # -1 because the edges operate on 1-indexing, which isn't the case for arrays
+    
+    k = len(event_dict) # k is set to 10 as it is the current max length of linear orders, can be modified to be length of event_dict
+    adj_matrix_list = []
+    for poset in hasse_posets:
+        adj_matrix = [[0 for size in range(k)] for size in range(k)] # initalize an empty k x k adjacency matrix of 0's
+        for edge in poset.edges:
+            adj_matrix[edge[0]-1][edge[1]-1] = 1 
+        adj_matrix_list.append(adj_matrix)    
+    adj_matrix_master_list.append(adj_matrix_list)
+
+print_string_group(adj_matrix_master_list)
