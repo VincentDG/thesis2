@@ -262,57 +262,50 @@ for concurrency in concurrency_list:
 # utilities.concurrency_mapping_summary(concurrency_list, grouped_linear_orders)
 # utilities.grouped_linear_order_summary(grouped_linear_orders)
 
-lo_strings = []
-for group in grouped_linear_orders:
-    string_grp = []
+# -- FOR REFACTORING --
 
-    for linear_order in group:
 
-        if any(event_no >= 9 for event_no in linear_order):
-            continue
+# debug = 0
+# lo_strings = []
+# for group in grouped_linear_orders:
+#     string_grp = []
 
-        string = ''.join([str(event_no + 1) for event_no in linear_order])
-        string_grp.append(string)
+#     for linear_order in group:
+
+#         if any(event_no >= 9 for event_no in linear_order):
+#             if any(event_no >= 10 for event_no in linear_order):
+#                 if debug == 0:
+#                     print(linear_order)
+#                     debug = 1
+#             continue
+
+#         string = ''.join([str(event_no + 1) for event_no in linear_order])
+#         string_grp.append(string)
     
-    if string_grp:
-        lo_strings.append(string_grp)
+#     if string_grp:
+#         lo_strings.append(string_grp)
 
-# This section of the code is for printing and testing outputs
-def print_adj_matrix(
-    adj_matrix: list[list[int]]
-):
-    for row in adj_matrix:
-        print(" "*4, row)
 
-def print_poset_cover(
-    poset_cover: list[list[list[int]]]
-):
-    for i in range(len(poset_cover)):
-        print(" "*2, "Poset number: ", i)
-        print_adj_matrix(poset_cover[i])
-
-def print_poset_block(
-    master_list: list[list[list[list[int]]]]  #check how to define classes later
-):
-    for i in range(len(master_list)):
-        print("Posets for string group no: ", i)
-        print_poset_cover(master_list[i])
 
 # This section of the code is for solving each instance of the poset cover problem
 adj_matrix_master_list = [] # This array stores the adjacency matrices of each string group
 seq_list = [] # This array stores one linear order per string group (useful for poset utilities)
-for string_group in lo_strings:
-    upsilon = string_group
+grp_no = 0
+for group in grouped_linear_orders:   
+    upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
     result_posets = [
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
     seq_list.append(result_linear_orders[0])
 
+    utilities.result_poset_summary(result_posets, grp_no)
+    grp_no += 1
+
     ## This section of the code gets the Hasse diagram of each poset in the poset cover
     hasse_posets = []
     for poset in result_posets:
-        hasse = PosetUtils.get_hasse_from_partial_order(poset, string_group[0])
+        hasse = PosetUtils.get_hasse_from_partial_order(poset, group[0])
         hasse_posets.append(hasse)
 
     ## This section of the code represents each Hasse diagram as an adjacency matrix, represented via an array of int lists
@@ -329,6 +322,9 @@ for string_group in lo_strings:
             adj_matrix[edge[0]-1][edge[1]-1] = 1 
         adj_matrix_list.append(adj_matrix)    
     adj_matrix_master_list.append(adj_matrix_list)
+
+
+
 
 # This section of the code verifies the correctness of the solutions
 # This is done by obtaining linear extensions from cover relations, which are then obtained from adjacency matrix
