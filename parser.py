@@ -291,7 +291,7 @@ def print_poset_cover(
         print(" "*2, "Poset number: ", i)
         print_adj_matrix(poset_cover[i])
 
-def print_string_group(
+def print_poset_block(
     master_list: list[list[list[list[int]]]]  #check how to define classes later
 ):
     for i in range(len(master_list)):
@@ -299,13 +299,15 @@ def print_string_group(
         print_poset_cover(master_list[i])
 
 # This section of the code is for solving each instance of the poset cover problem
-adj_matrix_master_list = []
+adj_matrix_master_list = [] # This array stores the adjacency matrices of each string group
+seq_list = [] # This array stores one linear order per string group (useful for poset utilities)
 for string_group in lo_strings:
     upsilon = string_group
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
     result_posets = [
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
+    seq_list.append(result_linear_orders[0])
 
     ## This section of the code gets the Hasse diagram of each poset in the poset cover
     hasse_posets = []
@@ -328,4 +330,35 @@ for string_group in lo_strings:
         adj_matrix_list.append(adj_matrix)    
     adj_matrix_master_list.append(adj_matrix_list)
 
-print_string_group(adj_matrix_master_list)
+# This section of the code verifies the correctness of the solutions
+# This is done by obtaining linear extensions from cover relations, which are then obtained from adjacency matrix
+# Make sure to check this part of the code only after poset solver has been refactored to accommodate linear orders of length > 10
+def get_linear_extensions_from_adj_matrix(
+    adj_matrix: list[list[int]], 
+    sequence: str
+) -> list[str]:
+    partial_order = []
+    for row in range(k):
+        for col in range(k):
+            if adj_matrix[row][col] == 1:
+                partial_order.append([row+1,col+1])
+    return PosetUtils.get_linear_extensions_from_relation(partial_order, sequence)
+    
+def sum_linear_extensions_of_poset_block(
+    poset_block: list[list[list[int]]], 
+    sequence: str
+) -> list[str]:
+    sum_linear_extensions = []
+    for poset in poset_block:
+        linear_extensions = get_linear_extensions_from_adj_matrix(poset, sequence)
+        sum_linear_extensions += linear_extensions
+    return sum_linear_extensions
+
+def check_correctness_of_poset_block(
+    poset_block: list[list[list[int]]], 
+    sequence: str,
+    string_group: list[str]
+) -> bool:
+    set_string_group = set(string_group)
+    set_poset_block = set(sum_linear_extensions_of_poset_block(poset_block, sequence))
+    return set_string_group == set_poset_block
