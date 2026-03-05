@@ -6,6 +6,10 @@ from checker import detect_exclusive_choices
 from datetime import datetime as dt
 import random
 import utilities
+from itertools import permutations
+from imports.app.posetsolver import PosetSolver
+from imports.app.posetutils import PosetUtils
+
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -146,31 +150,33 @@ for group in co_grp_traces:
     for trace in group:
         for event in trace:
             if event[0] not in event_dict:
-                event_dict[event[0]] = event_idx
+                event_dict[event[0]] = event_idx 
                 event_idx += 1
 
-utilities.event_dict_summary(event_dict)
+# utilities.event_dict_summary(event_dict)
+
 
 # This section of the code checks for concurrent events
 # Detect concurrency by checking if timestamp is equivalent
 # If concurrency is detected between events, two linear orders are created
-concurrency_list = []
-for grp in co_grp_traces:
-    for trace in grp:
-        for x in range(len(trace)-1):
-            for y in range(x+1, len(trace)):
-                if trace[x][1] == trace[y][1]:
-                    # Format: [grp_index, trace_index, event_index_1, event_index_2]
-                    concurrency_list.append([co_grp_traces.index(grp), grp.index(trace), x, y])
+# concurrency_list = []
+# for grp in co_grp_traces:
+#     for trace in grp:
+#         for x in range(len(trace)-1):
+#             for y in range(x+1, len(trace)):
+#                 if trace[x][1] == trace[y][1]:
+#                     # Format: [grp_index, trace_index, event_index_1, event_index_2]
+#                     concurrency_list.append([co_grp_traces.index(grp), grp.index(trace), x, y])
 
+# # ---
 
-utilities.concurrency_list_summary(concurrency_list)
+# utilities.concurrency_list_summary(concurrency_list)
 
 
 # This section creates the linear orders from the co_grp_traces, event_dict and concurrency_list
-linear_orders = []
 grouped_linear_orders = []
 for group in co_grp_traces:
+    linear_orders = []
     for trace in group:
         linear_order = []
         for event in trace:
@@ -182,7 +188,111 @@ for group in co_grp_traces:
 
 # utilities.linear_order_summary(linear_orders)
 
-utilities.concurrent_event_checker(event_dict, concurrency_list, co_grp_traces, grouped_linear_orders)
+# utilities.concurrent_event_checker(event_dict, concurrency_list, co_grp_traces, grouped_linear_orders)
 
-# I want to make the additional linear orders based on what's valid first.
+# utilities.grouped_linear_order_summary(grouped_linear_orders)
 
+# This section removes all the groups that cannot be used as input to the ATG visualizer.
+# Note that this section should be removed once the poset cover algorithm has been extended.
+# valid_lo_groups = []
+# for group in grouped_linear_orders:
+#     trace = group[0]
+#     if len(trace) >= 2 and len(trace) <= 9:
+#         valid_lo_groups.append(group)
+
+# utilities.grouped_linear_order_summary(valid_lo_groups)
+
+# This section of the code checks for concurrent events
+# Detect concurrency by checking if timestamp is equivalent
+# New concurrency algorithm puts them in a blocks instead of pairwise
+
+concurrency_list = []
+
+for grp_no in range(len(co_grp_traces)):
+    curr_grp = co_grp_traces[grp_no]
+    for trace_no in range(len(curr_grp)):
+        current_block = [0]
+        trace = co_grp_traces[grp_no][trace_no]
+
+        for i in range(1, len(trace)):
+            if trace[i][1] == trace[i-1][1]:
+                current_block.append(i)
+            else:
+                if len(current_block) > 1:
+                    concurrency_list.append([grp_no, trace_no, current_block])
+                current_block = [i]
+        
+        if len(current_block) > 1:
+            concurrency_list.append([grp_no, trace_no, current_block])
+
+# utilities.concurrency_list_summary(concurrency_list)
+
+# Map index from concurrency list to its actual event
+c_no = 0
+for concurrency in concurrency_list:
+    grp_no, trace_no, indices = concurrency[0], concurrency[1], concurrency[2]
+    linear_order = grouped_linear_orders[grp_no][trace_no]
+    concurrent_events = []
+    for c_index in indices:
+        event_no = linear_order[c_index]
+        concurrent_events.append(event_no)
+    
+    # Generate permutations
+    p = list(permutations(concurrent_events))
+    # utilities.permutation_summary(p)
+
+    # Insert permutations to linear orders
+    linear_extensions = []
+    for permutation in p:
+        new_order = linear_order.copy()
+        for idx, val in zip(indices, permutation):
+            new_order[idx] = val
+        linear_extensions.append(new_order)
+    
+    grp = grouped_linear_orders[grp_no]
+    # utilities.linear_extension_summary(linear_extensions)
+
+    # Insert to group
+    for extension in linear_extensions:
+        grp.append(extension)
+
+    c_no += 1
+
+
+# utilities.concurrency_mapping_summary(concurrency_list, grouped_linear_orders)
+# utilities.grouped_linear_order_summary(grouped_linear_orders)
+
+lo_strings = []
+for group in grouped_linear_orders:
+    string_grp = []
+
+    for linear_order in group:
+
+        if any(event_no >= 9 for event_no in linear_order):
+            continue
+
+        string = ''.join([str(event_no + 1) for event_no in linear_order])
+        string_grp.append(string)
+    
+    if string_grp:
+        lo_strings.append(string_grp)
+
+utilities.lo_strings_summary(lo_strings)
+
+# Test
+print()
+string_group_no = 0
+for string_group in lo_strings:
+    upsilon = string_group
+    result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
+    result_posets = [
+        PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
+    ]
+
+    print("Posets for string group no: ", string_group_no)
+    poset_number = 0
+    for poset in result_posets:
+        print(" "*2, "Poset number: ", poset_number)
+        print(" "*4, poset)
+        poset_number += 1
+    string_group_no += 1
