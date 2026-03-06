@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 
 type PartialOrder = list[tuple[int, int]]
 type CoverRelation = list[tuple[int, int]]
-type LinearOrder = str
+type LinearOrder = tuple[int, ...]    # Modified to support new architecture
 type AcyclicDiGraph = nx.DiGraph
 type HasseDiagram = nx.DiGraph
 type AnchorPair = tuple[int, int]

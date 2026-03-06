@@ -198,3 +198,33 @@ def output_upsilon(lo_strings):
         for s in grp:
             print(s)
         print()
+
+# This section of the code is for printing and testing outputs
+def print_adj_matrix(
+    adj_matrix: list[list[int]]
+):
+    for row in adj_matrix:
+        print(" "*4, row)
+
+def print_poset_cover(
+    poset_cover: list[list[list[int]]]
+):
+    for i in range(len(poset_cover)):
+        print(" "*2, "Poset number: ", i)
+        print_adj_matrix(poset_cover[i])
+
+def print_poset_block(
+    master_list: list[list[list[list[int]]]]  #check how to define classes later
+):
+    for i in range(len(master_list)):
+        print("Posets for string group no: ", i)
+        print_poset_cover(master_list[i])
+
+def result_poset_summary(result_posets, grp_no):
+    print("Posets for group no: ", grp_no)
+    poset_number = 0
+    for poset in result_posets:
+        print(" "*2, "Poset number: ", poset_number)
+        print(" "*4, poset)
+        poset_number += 1
+    print("---")

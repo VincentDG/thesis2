@@ -206,7 +206,7 @@ class PosetUtils:
         Returns \\
         bool
         """
-        x_index = linear_order.find(str(x))
+        x_index = linear_order.index(x)
         x_is_found_and_not_last = x_index not in [-1, len(linear_order) - 1]
         return x_is_found_and_not_last and linear_order[x_index + 1] == str(y)
 
@@ -224,8 +224,8 @@ class PosetUtils:
         Returns \\
         bool
         """
-        i = linear_order.find(str(x))
-        j = linear_order.find(str(y))
+        i = linear_order.index(x)
+        j = linear_order.index(y)
         return i != -1 and j != -1 and i < j
 
     @staticmethod
@@ -240,7 +240,7 @@ class PosetUtils:
         Returns \\
         LinearOrder aka str
         """
-        x_index = linear_order.find(str(x))
+        x_index = linear_order.index(x)
         if linear_order[x_index + 1] != str(y):
             raise ValueError(
                 f"{y} does not immediately succeed {x}. linear_order={linear_order}"
@@ -248,7 +248,7 @@ class PosetUtils:
         return f"{linear_order[:x_index]}{str(y)}{str(x)}{linear_order[x_index+2:]}"
 
     @staticmethod
-    def edge_label(linear_order1: str, linear_order2: str) -> EdgeLabel | None:
+    def edge_label(linear_order1: LinearOrder, linear_order2: LinearOrder) -> EdgeLabel | None:
         """
         Returns the two numbers that were swapped between permutations,
         or None if not a valid adjacent transposition
@@ -272,8 +272,8 @@ class PosetUtils:
         if p1[pos1] != p2[pos2] or p1[pos2] != p2[pos1]:
             return None
 
-        x = int(p1[pos1])
-        y = int(p1[pos2])
+        x = p1[pos1]
+        y = p1[pos2]
         return frozenset({x, y})
 
     @staticmethod
@@ -315,12 +315,12 @@ class PosetUtils:
                 f"Cannot get conv(L) if L is empty. linear_orders={linear_orders}"
             )
 
-        def get_partial_order(linear_order: str) -> set[tuple[int, int]]:
+        def get_partial_order(linear_order: list[int]) -> set[tuple[int, int]]:   # Changed linear_order from str to list[int]
             partial_order: set[tuple[int, int]] = set()
             n = len(linear_order)
             for i in range(n):
                 for j in range(i + 1, n):
-                    partial_order.add((int(linear_order[i]), int(linear_order[j])))
+                    partial_order.add((linear_order[i], linear_order[j])) # Removed typecasting to int
             return partial_order
 
         partial_orders = [get_partial_order(l) for l in linear_orders]
