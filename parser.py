@@ -207,6 +207,9 @@ for concurrency in concurrency_list:
 
     c_no += 1
 
+# This section of the code makes grouped_linear_orders into a list of tuples, to ensure that it is hashable
+grouped_linear_orders = [[tuple(linear_order) for linear_order in group] for group in grouped_linear_orders]
+
 # This section of the code is for solving each instance of the poset cover problem
 hasse_diagram_list = []
 grp_no = 0
@@ -224,11 +227,7 @@ for group in grouped_linear_orders:
     for result in result_posets:
         hasse = PosetUtils.get_hasse_from_partial_order(result, group[0])  
         hasse_posets.append(hasse)
-    
-        tr_poset = PosetUtils.get_linear_extensions_from_graph(hasse)
-        tr_poset_list.append(tr_poset)
-
-    ## Thise section of the code appends the Hasse diagrams of each poset block to the master list
+    ## This section of the code appends the Hasse diagrams of each poset block to the master list
     hasse_diagram_list.append(hasse_posets)
 
 
@@ -237,8 +236,4 @@ for group in grouped_linear_orders:
 # Print linear extensions, and compare to stored set of linear extensions
     # use get_linear_extensions_from_relation
     # compile list of linear extensions in a poset block
-print("hi this is instance before manipulation")
-[print(x) for x in grouped_linear_orders[0]]
-print("hi this is solution before manipulation")
-[print(x) for x in hasse_diagram_list[0]]
 utilities.check_solution_to_instance(grouped_linear_orders[0], hasse_diagram_list[0])

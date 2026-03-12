@@ -36,7 +36,7 @@ class PosetUtils:
         LinearExtensions aka list[str]
         """
         sortings = list(nx.all_topological_sorts(G))
-        return sorted(["".join(map(str, sorting)) for sorting in sortings])
+        return sorted([tuple(sorting) for sorting in sortings])
 
     @staticmethod
     def get_linear_extensions_from_relation(
@@ -56,10 +56,11 @@ class PosetUtils:
         LinearExtensions aka list[str]
         """
         G = nx.DiGraph()
-        G.add_nodes_from(range(1, len(sequence) + 1))
+        G.add_nodes_from(range(len(sequence)))  #refactored to include 0-indexing
         G.add_edges_from(relation)
         sortings = list(nx.all_topological_sorts(G))
-        return sorted(["".join(map(str, sorting)) for sorting in sortings])
+        return sorted([tuple(sorting) for sorting in sortings])
+
 
     @staticmethod
     def get_graph_from_relation(
@@ -79,7 +80,7 @@ class PosetUtils:
         AcyclicDiGraph aka nx.DiGraph
         """
         G = nx.DiGraph()
-        G.add_nodes_from(range(1, len(sequence) + 1))
+        G.add_nodes_from(range(len(sequence)))  #refactored to include 0-indexing
         G.add_edges_from(relation)
         return G
 
@@ -103,7 +104,7 @@ class PosetUtils:
         HasseDiagram aka nx.DiGraph
         """
         G = nx.DiGraph()
-        G.add_nodes_from(range(1, len(sequence) + 1))
+        G.add_nodes_from(range(len(sequence)))  # refactored to fix indicing
         G.add_edges_from(partial_order)
         TR = nx.transitive_reduction(G)
         return TR
