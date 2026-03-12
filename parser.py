@@ -4,12 +4,10 @@ import os
 import re
 from checker import detect_exclusive_choices
 from datetime import datetime as dt
-import random
 import utilities
 from itertools import permutations
 from imports.app.posetsolver import PosetSolver
 from imports.app.posetutils import PosetUtils
-
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -93,11 +91,6 @@ for trace in trace_events_metadata:
     if len(seen) == len(trace):
         nl_traces.append(trace)
 
-# print("No. of traces with no loops:", len(nl_traces))
-# print("No. of traces:", len(trace_events_metadata))
-# for activity in nl_traces[0]:
-#     print(activity)
-
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
 date_format = "%Y-%m-%dT%H:%M:%S.%f"
@@ -128,9 +121,6 @@ for trace in dt_traces:
             if event_names == x:
                 grp_traces[event_sets.index(x)].append(trace)
 
-# utilities.event_sets_summary(event_sets)
-# utilities.grp_traces_summary(grp_traces)
-
 # This section of the code sorts the events of each trace in chronological order
 # co means Chronologically Ordered
 co_grp_traces = []
@@ -141,8 +131,6 @@ for grp in grp_traces:
         co_traces.append(co_events)
     co_grp_traces.append(co_traces)
 
-# utilities.co_grp_summary(co_grp_traces)
-
 # This section populates the event dictionary
 event_dict = {}
 event_idx = 0
@@ -152,26 +140,6 @@ for group in co_grp_traces:
             if event[0] not in event_dict:
                 event_dict[event[0]] = event_idx 
                 event_idx += 1
-
-# utilities.event_dict_summary(event_dict)
-
-
-# This section of the code checks for concurrent events
-# Detect concurrency by checking if timestamp is equivalent
-# If concurrency is detected between events, two linear orders are created
-# concurrency_list = []
-# for grp in co_grp_traces:
-#     for trace in grp:
-#         for x in range(len(trace)-1):
-#             for y in range(x+1, len(trace)):
-#                 if trace[x][1] == trace[y][1]:
-#                     # Format: [grp_index, trace_index, event_index_1, event_index_2]
-#                     concurrency_list.append([co_grp_traces.index(grp), grp.index(trace), x, y])
-
-# # ---
-
-# utilities.concurrency_list_summary(concurrency_list)
-
 
 # This section creates the linear orders from the co_grp_traces, event_dict and concurrency_list
 grouped_linear_orders = []
@@ -184,23 +152,6 @@ for group in co_grp_traces:
             linear_order.append(event_number)
         linear_orders.append(linear_order)    
     grouped_linear_orders.append(linear_orders)
-
-
-# utilities.linear_order_summary(linear_orders)
-
-# utilities.concurrent_event_checker(event_dict, concurrency_list, co_grp_traces, grouped_linear_orders)
-
-# utilities.grouped_linear_order_summary(grouped_linear_orders)
-
-# This section removes all the groups that cannot be used as input to the ATG visualizer.
-# Note that this section should be removed once the poset cover algorithm has been extended.
-# valid_lo_groups = []
-# for group in grouped_linear_orders:
-#     trace = group[0]
-#     if len(trace) >= 2 and len(trace) <= 9:
-#         valid_lo_groups.append(group)
-
-# utilities.grouped_linear_order_summary(valid_lo_groups)
 
 # This section of the code checks for concurrent events
 # Detect concurrency by checking if timestamp is equivalent
@@ -225,8 +176,6 @@ for grp_no in range(len(co_grp_traces)):
         if len(current_block) > 1:
             concurrency_list.append([grp_no, trace_no, current_block])
 
-# utilities.concurrency_list_summary(concurrency_list)
-
 # Map index from concurrency list to its actual event
 c_no = 0
 for concurrency in concurrency_list:
@@ -239,7 +188,6 @@ for concurrency in concurrency_list:
     
     # Generate permutations
     p = list(permutations(concurrent_events))
-    # utilities.permutation_summary(p)
 
     # Insert permutations to linear orders
     linear_extensions = []
@@ -250,7 +198,6 @@ for concurrency in concurrency_list:
         linear_extensions.append(new_order)
     
     grp = grouped_linear_orders[grp_no]
-    # utilities.linear_extension_summary(linear_extensions)
 
     # Insert to group
     for extension in linear_extensions:
@@ -258,38 +205,8 @@ for concurrency in concurrency_list:
 
     c_no += 1
 
-
-# utilities.concurrency_mapping_summary(concurrency_list, grouped_linear_orders)
-# utilities.grouped_linear_order_summary(grouped_linear_orders)
-
-# -- FOR REFACTORING --
-
-
-# debug = 0
-# lo_strings = []
-# for group in grouped_linear_orders:
-#     string_grp = []
-
-#     for linear_order in group:
-
-#         if any(event_no >= 9 for event_no in linear_order):
-#             if any(event_no >= 10 for event_no in linear_order):
-#                 if debug == 0:
-#                     print(linear_order)
-#                     debug = 1
-#             continue
-
-#         string = ''.join([str(event_no + 1) for event_no in linear_order])
-#         string_grp.append(string)
-    
-#     if string_grp:
-#         lo_strings.append(string_grp)
-
-
-
 # This section of the code is for solving each instance of the poset cover problem
-adj_matrix_master_list = [] # This array stores the adjacency matrices of each string group
-seq_list = [] # This array stores one linear order per string group (useful for poset utilities)
+hasse_diagram_list = []
 grp_no = 0
 for group in grouped_linear_orders:   
     upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
@@ -297,64 +214,21 @@ for group in grouped_linear_orders:
     result_posets = [
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
-    seq_list.append(result_linear_orders[0])
-
-    utilities.result_poset_summary(result_posets, grp_no)
+ 
+    ## !!! potential error coming from here !!!
+    ## This section of the code gets the Hasse diagram of each poset in the poset cover (simply to apply transitive reduction)
+    hasse_posets = []
+    tr_poset_list = []
+    for result in result_posets:
+        hasse = PosetUtils.get_hasse_from_partial_order(result, group[0])  
+        hasse_posets.append(hasse)
+    
+    # This section of the code verifies the correctness of the solutions
+    # This is done by obtaining linear extensions from cover relations
+    # Print linear extensions, and compare to stored set of linear extensions
+    print("This is Poset Block: " + str(grp_no))
+    utilities.check_solution_to_instance(upsilon, hasse_posets)
     grp_no += 1
 
-    ## This section of the code gets the Hasse diagram of each poset in the poset cover
-    hasse_posets = []
-    for poset in result_posets:
-        hasse = PosetUtils.get_hasse_from_partial_order(poset, group[0])
-        hasse_posets.append(hasse)
-
-    ## This section of the code represents each Hasse diagram as an adjacency matrix, represented via an array of int lists
-    ## The adjacency matrices are then stored to a list
-    ## The rows and columns of the adjacency matrix represent the nodes of the poset
-    ## A value of 1 in a cell (A-1, B-1) of the adjacency matrix means that there is an edge going from Node A to Node B
-    # -1 because the edges operate on 1-indexing, which isn't the case for arrays
-    
-    k = len(event_dict) # k is set to 10 as it is the current max length of linear orders, can be modified to be length of event_dict
-    adj_matrix_list = []
-    for poset in hasse_posets:
-        adj_matrix = [[0 for size in range(k)] for size in range(k)] # initalize an empty k x k adjacency matrix of 0's
-        for edge in poset.edges:
-            adj_matrix[edge[0]-1][edge[1]-1] = 1 
-        adj_matrix_list.append(adj_matrix)    
-    adj_matrix_master_list.append(adj_matrix_list)
-
-
-
-
-# This section of the code verifies the correctness of the solutions
-# This is done by obtaining linear extensions from cover relations, which are then obtained from adjacency matrix
-# Make sure to check this part of the code only after poset solver has been refactored to accommodate linear orders of length > 10
-def get_linear_extensions_from_adj_matrix(
-    adj_matrix: list[list[int]], 
-    sequence: str
-) -> list[str]:
-    partial_order = []
-    for row in range(k):
-        for col in range(k):
-            if adj_matrix[row][col] == 1:
-                partial_order.append([row+1,col+1])
-    return PosetUtils.get_linear_extensions_from_relation(partial_order, sequence)
-    
-def sum_linear_extensions_of_poset_block(
-    poset_block: list[list[list[int]]], 
-    sequence: str
-) -> list[str]:
-    sum_linear_extensions = []
-    for poset in poset_block:
-        linear_extensions = get_linear_extensions_from_adj_matrix(poset, sequence)
-        sum_linear_extensions += linear_extensions
-    return sum_linear_extensions
-
-def check_correctness_of_poset_block(
-    poset_block: list[list[list[int]]], 
-    sequence: str,
-    string_group: list[str]
-) -> bool:
-    set_string_group = set(string_group)
-    set_poset_block = set(sum_linear_extensions_of_poset_block(poset_block, sequence))
-    return set_string_group == set_poset_block
+    ## This section of the code appends the Hasse diagrams of each poset block to the master list
+    hasse_diagram_list.append(hasse_posets)

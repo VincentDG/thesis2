@@ -36,11 +36,11 @@ class PosetUtils:
         LinearExtensions aka list[str]
         """
         sortings = list(nx.all_topological_sorts(G))
-        return sorted(["".join(map(str, sorting)) for sorting in sortings])
+        return sorted([tuple(sorting) for sorting in sortings]) #refactored to express as a tuple of ints
 
     @staticmethod
     def get_linear_extensions_from_relation(
-        relation: PartialOrder | CoverRelation, sequence: str
+        relation: PartialOrder | CoverRelation, sequence: LinearOrder # changed defn
     ) -> LinearExtensions:
         """Get the linear extensions of a poset using either its partial order or cover relation.
 
@@ -56,14 +56,15 @@ class PosetUtils:
         LinearExtensions aka list[str]
         """
         G = nx.DiGraph()
-        G.add_nodes_from(range(1, len(sequence) + 1))
+        G.add_nodes_from(sequence)  # refactored to include 0-indexing, as well as to include nodes from sequence rather than a range
         G.add_edges_from(relation)
         sortings = list(nx.all_topological_sorts(G))
-        return sorted(["".join(map(str, sorting)) for sorting in sortings])
+        return sorted([tuple(sorting) for sorting in sortings]) #refactored to express as a tuple of ints
+
 
     @staticmethod
     def get_graph_from_relation(
-        relation: PartialOrder | CoverRelation, sequence: str
+        relation: PartialOrder | CoverRelation, sequence: LinearOrder #changed defn
     ) -> AcyclicDiGraph | HasseDiagram:
         """Get the directed acyclic graph representation of a poset using either its partial order or cover relation.
 
@@ -79,13 +80,13 @@ class PosetUtils:
         AcyclicDiGraph aka nx.DiGraph
         """
         G = nx.DiGraph()
-        G.add_nodes_from(range(1, len(sequence) + 1))
+        G.add_nodes_from(sequence) # refactored to include 0-indexing, as well as to include nodes from sequence rather than a range
         G.add_edges_from(relation)
         return G
 
     @staticmethod
     def get_hasse_from_partial_order(
-        partial_order: PartialOrder, sequence: str
+        partial_order: PartialOrder, sequence: LinearOrder  #changed defn
     ) -> HasseDiagram:
         """Get the hasse representation of a poset using its partial order.
 
@@ -103,7 +104,7 @@ class PosetUtils:
         HasseDiagram aka nx.DiGraph
         """
         G = nx.DiGraph()
-        G.add_nodes_from(range(1, len(sequence) + 1))
+        G.add_nodes_from(sequence)  # refactored to include 0-indexing, as well as to include nodes from sequence rather than a range
         G.add_edges_from(partial_order)
         TR = nx.transitive_reduction(G)
         return TR
