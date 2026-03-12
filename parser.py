@@ -4,12 +4,10 @@ import os
 import re
 from checker import detect_exclusive_choices
 from datetime import datetime as dt
-import random
 import utilities
 from itertools import permutations
 from imports.app.posetsolver import PosetSolver
 from imports.app.posetutils import PosetUtils
-import sys
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -207,9 +205,6 @@ for concurrency in concurrency_list:
 
     c_no += 1
 
-# This section of the code makes grouped_linear_orders into a list of tuples, to ensure that it is hashable
-grouped_linear_orders = [[tuple(linear_order) for linear_order in group] for group in grouped_linear_orders]
-
 # This section of the code is for solving each instance of the poset cover problem
 hasse_diagram_list = []
 grp_no = 0
@@ -227,13 +222,13 @@ for group in grouped_linear_orders:
     for result in result_posets:
         hasse = PosetUtils.get_hasse_from_partial_order(result, group[0])  
         hasse_posets.append(hasse)
+    
+    # This section of the code verifies the correctness of the solutions
+    # This is done by obtaining linear extensions from cover relations
+    # Print linear extensions, and compare to stored set of linear extensions
+    print("This is Poset Block: " + str(grp_no))
+    utilities.check_solution_to_instance(upsilon, hasse_posets)
+    grp_no += 1
+
     ## This section of the code appends the Hasse diagrams of each poset block to the master list
     hasse_diagram_list.append(hasse_posets)
-
-
-# This section of the code verifies the correctness of the solutions
-# This is done by obtaining linear extensions from cover relations
-# Print linear extensions, and compare to stored set of linear extensions
-    # use get_linear_extensions_from_relation
-    # compile list of linear extensions in a poset block
-utilities.check_solution_to_instance(grouped_linear_orders[0], hasse_diagram_list[0])

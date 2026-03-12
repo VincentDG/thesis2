@@ -36,7 +36,7 @@ class PosetUtils:
         LinearExtensions aka list[str]
         """
         sortings = list(nx.all_topological_sorts(G))
-        return sorted([tuple(sorting) for sorting in sortings])
+        return sorted([tuple(sorting) for sorting in sortings]) #refactored to express as a tuple of ints
 
     @staticmethod
     def get_linear_extensions_from_relation(
@@ -59,7 +59,7 @@ class PosetUtils:
         G.add_nodes_from(range(len(sequence)))  #refactored to include 0-indexing
         G.add_edges_from(relation)
         sortings = list(nx.all_topological_sorts(G))
-        return sorted([tuple(sorting) for sorting in sortings])
+        return sorted([tuple(sorting) for sorting in sortings]) #refactored to express as a tuple of ints
 
 
     @staticmethod
