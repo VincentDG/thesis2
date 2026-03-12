@@ -251,6 +251,10 @@ def check_solution_to_instance(
     lo_solution = compile_linear_extensions(solution)
 
     if instance == lo_solution:
-        print("Yay! The solution is correct!")
+        print("Yay! The solution is correct!\n")
     else:
         print("Boo! The solution is wrong!")
+        print("Here are the linear orders of the instance: ")
+        print(instance, "\n")
+        print("Here are the linear orders of the solution: ")
+        print(lo_solution, "\n")
