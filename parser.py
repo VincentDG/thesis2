@@ -288,73 +288,42 @@ for concurrency in concurrency_list:
 
 
 # This section of the code is for solving each instance of the poset cover problem
-adj_matrix_master_list = [] # This array stores the adjacency matrices of each string group
-seq_list = [] # This array stores one linear order per string group (useful for poset utilities)
-grp_no = 0
+# adj_matrix_master_list = [] # This array stores the adjacency matrices of each string group
+# seq_list = [] # This array stores one linear order per string group (useful for poset utilities)
+hasse_diagram_list = []
+# grp_no = 0
 for group in grouped_linear_orders:   
     upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
     result_posets = [
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
-    seq_list.append(result_linear_orders[0])
+    # seq_list.append(result_linear_orders[0])
 
-    utilities.result_poset_summary(result_posets, grp_no)
-    grp_no += 1
+    # utilities.result_poset_summary(result_posets, grp_no)
+    # grp_no += 1
 
+    ## !!! potential error coming from here !!!
     ## This section of the code gets the Hasse diagram of each poset in the poset cover
     hasse_posets = []
+    tr_poset_list = []
     for poset in result_posets:
         hasse = PosetUtils.get_hasse_from_partial_order(poset, group[0])
         hasse_posets.append(hasse)
 
-    ## This section of the code represents each Hasse diagram as an adjacency matrix, represented via an array of int lists
-    ## The adjacency matrices are then stored to a list
-    ## The rows and columns of the adjacency matrix represent the nodes of the poset
-    ## A value of 1 in a cell (A-1, B-1) of the adjacency matrix means that there is an edge going from Node A to Node B
-    # -1 because the edges operate on 1-indexing, which isn't the case for arrays
-    
-    k = len(event_dict) # k is set to 10 as it is the current max length of linear orders, can be modified to be length of event_dict
-    adj_matrix_list = []
-    for poset in hasse_posets:
-        adj_matrix = [[0 for size in range(k)] for size in range(k)] # initalize an empty k x k adjacency matrix of 0's
-        for edge in poset.edges:
-            adj_matrix[edge[0]-1][edge[1]-1] = 1 
-        adj_matrix_list.append(adj_matrix)    
-    adj_matrix_master_list.append(adj_matrix_list)
+        tr_poset = PosetUtils.get_linear_extensions_from_graph(hasse)
+        tr_poset_list.append(tr_poset)
 
-
-
+    # Thise section of the code appends the Hasse diagrams of each poset block to the master list
+    hasse_diagram_list.append(hasse_posets)
 
 # This section of the code verifies the correctness of the solutions
-# This is done by obtaining linear extensions from cover relations, which are then obtained from adjacency matrix
-# Make sure to check this part of the code only after poset solver has been refactored to accommodate linear orders of length > 10
-def get_linear_extensions_from_adj_matrix(
-    adj_matrix: list[list[int]], 
-    sequence: str
-) -> list[str]:
-    partial_order = []
-    for row in range(k):
-        for col in range(k):
-            if adj_matrix[row][col] == 1:
-                partial_order.append([row+1,col+1])
-    return PosetUtils.get_linear_extensions_from_relation(partial_order, sequence)
-    
-def sum_linear_extensions_of_poset_block(
-    poset_block: list[list[list[int]]], 
-    sequence: str
-) -> list[str]:
-    sum_linear_extensions = []
-    for poset in poset_block:
-        linear_extensions = get_linear_extensions_from_adj_matrix(poset, sequence)
-        sum_linear_extensions += linear_extensions
-    return sum_linear_extensions
-
-def check_correctness_of_poset_block(
-    poset_block: list[list[list[int]]], 
-    sequence: str,
-    string_group: list[str]
-) -> bool:
-    set_string_group = set(string_group)
-    set_poset_block = set(sum_linear_extensions_of_poset_block(poset_block, sequence))
-    return set_string_group == set_poset_block
+# This is done by obtaining linear extensions from cover relations
+# Print linear extensions, and compare to stored set of linear extensions
+    # use get_linear_extensions_from_relation
+    # compile list of linear extensions in a poset block
+print("hi this is instance before manipulation")
+[print(x) for x in grouped_linear_orders[0]]
+print("hi this is solution before manipulation")
+[print(x) for x in hasse_diagram_list[0]]
+utilities.check_solution_to_instance(grouped_linear_orders[0], hasse_diagram_list[0])

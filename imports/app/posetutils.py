@@ -103,7 +103,7 @@ class PosetUtils:
         HasseDiagram aka nx.DiGraph
         """
         G = nx.DiGraph()
-        G.add_nodes_from(range(1, len(sequence) + 1))
+        G.add_nodes_from(range(0, len(sequence)))  # Refactored to account for 0 indexing
         G.add_edges_from(partial_order)
         TR = nx.transitive_reduction(G)
         return TR

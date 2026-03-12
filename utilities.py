@@ -1,3 +1,6 @@
+from imports.app.posetutils import PosetUtils
+from imports.app.classes import *
+
 BREAK_NO = 6
 
 def event_sets_summary(event_sets):
@@ -228,3 +231,30 @@ def result_poset_summary(result_posets, grp_no):
         print(" "*4, poset)
         poset_number += 1
     print("---")
+
+# Uses the get_linear_extensions_from_graph utility to express graphs as a set of linear extensions
+def compile_linear_extensions(
+    poset_block: list[HasseDiagram]
+) -> list[LinearOrder]:
+    instance_linear_extensions = []
+    for poset in poset_block:
+        for le in PosetUtils.get_linear_extensions_from_graph(poset):
+            if le not in instance_linear_extensions:
+                instance_linear_extensions.append(le)
+    return instance_linear_extensions
+
+def check_solution_to_instance(
+    instance: list[LinearOrder],
+    poset_block: list[HasseDiagram]
+) -> bool:
+    lo_instance = []
+    for lo in instance:
+        if lo not in lo_instance:
+            lo_instance.append(lo)
+    
+    print("These are the linear orders of the instance")
+    [print(x) for x in lo_instance]
+
+    lo_solution = compile_linear_extensions(poset_block)
+    print("These are the linear orders of the solution")
+    [print(y) for y in lo_solution]
