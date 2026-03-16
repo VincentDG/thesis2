@@ -1,2 +1,4 @@
 /venv/
 /test.txt
+/output.json.gz
+/output.json
