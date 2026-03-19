@@ -209,7 +209,6 @@ for concurrency in concurrency_list:
 
 # This section of the code is for solving each instance of the poset cover problem
 hasse_diagram_list = []
-grp_no = 0
 for group in grouped_linear_orders:   
     upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
@@ -224,13 +223,6 @@ for group in grouped_linear_orders:
         hasse = PosetUtils.get_hasse_from_partial_order(result, group[0])  
         hasse_posets.append(hasse)
     
-    # This section of the code verifies the correctness of the solutions
-    # This is done by obtaining linear extensions from cover relations
-    # Print linear extensions, and compare to stored set of linear extensions
-    print("This is Poset Block: " + str(grp_no))
-    utilities.check_solution_to_instance(upsilon, hasse_posets)
-    grp_no += 1
-
     ## This section of the code appends the Hasse diagrams of each poset block to the master list
     hasse_diagram_list.append(hasse_posets)
 
