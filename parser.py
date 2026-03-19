@@ -39,31 +39,36 @@ while re.search("<trace>", contents):
     contents = contents[i:]
 
 # This section of the code looks through each trace to extract its name and saves it to an array
-trace_metadata = []
+# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
+event_log = {
+    "traces": {
+        "metadata": [],
+        "events": {
+            "metadata": [],
+            "contents": []
+        }
+    }
+ }
 for trace in traces:
     x = re.search("string key=\"concept:name\" value=\"", trace)
     x_end = x.end()
     name_end = re.search("\"/>", trace[x_end:])
     trace_name = trace[x_end:x_end + name_end.start()]
-    trace_metadata.append(trace_name)
+    event_log["traces"]["metadata"].append(trace_name)
 
-# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
-events = []
-for trace in traces:
     i = 0
-    event_log = []
+    event_contents = []
     while re.search("<event>", trace):
         x = re.search("<event>", trace)
         y = re.search("</event>", trace)
         start = x.start()
         i = y.end()
-        event_log.append(trace[start:i])
+        event_contents.append(trace[start:i])
         trace = trace[i:]
-    events.append(event_log)
+    event_log["traces"]["events"]["contents"].append(event_contents)
 
 # This section of the code extracts the name and timestamp of each event and saves it as a pair in an array
-trace_events_metadata = []
-for trace in events:
+for trace in event_log["traces"]["events"]["contents"]:
     events_metadata = []
     for event in trace:
         # extracting name
@@ -78,12 +83,13 @@ for trace in events:
         event_date = event[x_end:x_end + date_end.start()]
         metadata = [event_name, event_date]
         events_metadata.append(metadata)
-    trace_events_metadata.append(events_metadata)
+    event_log["traces"]["events"]["metadata"].append(events_metadata)
 
 # This section of the code checks for duplicate events (looping)
 # nl means No Loops
 nl_traces = []
-for trace in trace_events_metadata:
+trace_ids = []
+for idx_trace, trace in enumerate(event_log["traces"]["events"]["metadata"]):
     seen = set()
     for event in trace:
         if event[0] not in seen:
@@ -92,6 +98,7 @@ for trace in trace_events_metadata:
             break
     if len(seen) == len(trace):
         nl_traces.append(trace)
+        trace_ids.append(event_log["traces"]["metadata"][idx_trace])
 
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
@@ -105,8 +112,6 @@ for trace in nl_traces:
         events.append(new_event)
     dt_traces.append(events)
 
-
-# REMEMBER: check for concurrent events
 # This section groups traces via the set of events they have
 # grp means Grouped
 event_sets = []
@@ -209,7 +214,6 @@ for concurrency in concurrency_list:
 
 # This section of the code is for solving each instance of the poset cover problem
 hasse_diagram_list = []
-grp_no = 0
 for group in grouped_linear_orders:   
     upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
@@ -224,13 +228,6 @@ for group in grouped_linear_orders:
         hasse = PosetUtils.get_hasse_from_partial_order(result, group[0])  
         hasse_posets.append(hasse)
     
-    # This section of the code verifies the correctness of the solutions
-    # This is done by obtaining linear extensions from cover relations
-    # Print linear extensions, and compare to stored set of linear extensions
-    print("This is Poset Block: " + str(grp_no))
-    utilities.check_solution_to_instance(upsilon, hasse_posets)
-    grp_no += 1
-
     ## This section of the code appends the Hasse diagrams of each poset block to the master list
     hasse_diagram_list.append(hasse_posets)
 
@@ -270,3 +267,21 @@ with gzip.open(output_path, 'wt', encoding='utf-8') as f:
     json.dump(output, f)
 
 print(f"Output written to {output_path}")
+
+# This part of the code iterates through the original array of traces, and trimming traces whose IDs are not in trace_ids
+# which is the set of traces representable as posets
+trimmed_input = []
+for trace in traces:
+    x = re.search("string key=\"concept:name\" value=\"", trace)
+    x_end = x.end()
+    name_end = re.search("\"/>", trace[x_end:])
+    trace_name = trace[x_end:x_end + name_end.start()]
+
+    if trace_name in trace_ids:
+        trimmed_input.append(trace)
+
+trimmed_input_path = "trimmed_input.json.gz"
+with gzip.open(trimmed_input_path, 'wt', encoding='utf-8') as f:
+    json.dump(trimmed_input, f)
+
+print(f"Trimmed dataset written to {trimmed_input_path}")
