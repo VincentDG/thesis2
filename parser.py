@@ -39,31 +39,36 @@ while re.search("<trace>", contents):
     contents = contents[i:]
 
 # This section of the code looks through each trace to extract its name and saves it to an array
-trace_metadata = []
+# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
+event_log = {
+    "traces": {
+        "metadata": [],
+        "events": {
+            "metadata": [],
+            "contents": []
+        }
+    }
+ }
 for trace in traces:
     x = re.search("string key=\"concept:name\" value=\"", trace)
     x_end = x.end()
     name_end = re.search("\"/>", trace[x_end:])
     trace_name = trace[x_end:x_end + name_end.start()]
-    trace_metadata.append(trace_name)
+    event_log["traces"]["metadata"].append(trace_name)
 
-# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
-events = []
-for trace in traces:
     i = 0
-    event_log = []
+    event_contents = []
     while re.search("<event>", trace):
         x = re.search("<event>", trace)
         y = re.search("</event>", trace)
         start = x.start()
         i = y.end()
-        event_log.append(trace[start:i])
+        event_contents.append(trace[start:i])
         trace = trace[i:]
-    events.append(event_log)
+    event_log["traces"]["events"]["contents"].append(event_contents)
 
 # This section of the code extracts the name and timestamp of each event and saves it as a pair in an array
-trace_events_metadata = []
-for trace in events:
+for trace in event_log["traces"]["events"]["contents"]:
     events_metadata = []
     for event in trace:
         # extracting name
@@ -78,12 +83,13 @@ for trace in events:
         event_date = event[x_end:x_end + date_end.start()]
         metadata = [event_name, event_date]
         events_metadata.append(metadata)
-    trace_events_metadata.append(events_metadata)
+    event_log["traces"]["events"]["metadata"].append(events_metadata)
 
 # This section of the code checks for duplicate events (looping)
 # nl means No Loops
 nl_traces = []
-for trace in trace_events_metadata:
+trace_ids = []
+for idx_trace, trace in enumerate(event_log["traces"]["events"]["metadata"]):
     seen = set()
     for event in trace:
         if event[0] not in seen:
@@ -92,6 +98,7 @@ for trace in trace_events_metadata:
             break
     if len(seen) == len(trace):
         nl_traces.append(trace)
+        trace_ids.append(event_log["traces"]["metadata"][idx_trace])
 
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
@@ -105,8 +112,6 @@ for trace in nl_traces:
         events.append(new_event)
     dt_traces.append(events)
 
-
-# REMEMBER: check for concurrent events
 # This section groups traces via the set of events they have
 # grp means Grouped
 event_sets = []
