@@ -267,3 +267,21 @@ with gzip.open(output_path, 'wt', encoding='utf-8') as f:
     json.dump(output, f)
 
 print(f"Output written to {output_path}")
+
+# This part of the code iterates through the original array of traces, and trimming traces whose IDs are not in trace_ids
+# which is the set of traces representable as posets
+trimmed_input = []
+for trace in traces:
+    x = re.search("string key=\"concept:name\" value=\"", trace)
+    x_end = x.end()
+    name_end = re.search("\"/>", trace[x_end:])
+    trace_name = trace[x_end:x_end + name_end.start()]
+
+    if trace_name in trace_ids:
+        trimmed_input.append(trace)
+
+trimmed_input_path = "trimmed_input.json.gz"
+with gzip.open(trimmed_input_path, 'wt', encoding='utf-8') as f:
+    json.dump(trimmed_input, f)
+
+print(f"Trimmed dataset written to {trimmed_input_path}")

@@ -5,13 +5,15 @@ import time
 import networkx as nx
 
 OUTPUT_PATH = "output.json.gz"
+ORIGINAL_PATH = "trimmed_input.json.gz"
 
 dirname = os.path.dirname(__file__)
 dataset_folder = "Sepsis Cases - Event Log_1_all"
 dataset_filename = "Sepsis Cases - Event Log.xes.gz"
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
 
-ORIGINAL_PATH = rel_path 
+# ORIGINAL_PATH = rel_path 
+
 
 # --- Size ---
 def measure_size(original_path, compressed_path):
