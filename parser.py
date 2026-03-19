@@ -8,6 +8,8 @@ import utilities
 from itertools import permutations
 from imports.app.posetsolver import PosetSolver
 from imports.app.posetutils import PosetUtils
+import json
+import time
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
@@ -218,7 +220,6 @@ for group in grouped_linear_orders:
     ## !!! potential error coming from here !!!
     ## This section of the code gets the Hasse diagram of each poset in the poset cover (simply to apply transitive reduction)
     hasse_posets = []
-    tr_poset_list = []
     for result in result_posets:
         hasse = PosetUtils.get_hasse_from_partial_order(result, group[0])  
         hasse_posets.append(hasse)
@@ -232,3 +233,40 @@ for group in grouped_linear_orders:
 
     ## This section of the code appends the Hasse diagrams of each poset block to the master list
     hasse_diagram_list.append(hasse_posets)
+
+# Outputting
+groups = []
+for group_idx, poset_block in enumerate(hasse_diagram_list):
+    group = grouped_linear_orders[group_idx]
+
+    trace_counts = {}
+    for trace in group:
+        key = str(tuple(trace))
+        trace_counts[key] = trace_counts.get(key, 0) + 1
+    
+    poset_cover = []
+    for hasse in poset_block:
+        poset_cover.append({
+            "nodes": list(hasse.nodes()),
+            "edges": [list(e) for e in hasse.edges()]
+        })
+    
+    groups.append({
+        "event_set": list(set(e for trace in group for e in trace)),
+        "trace_counts": trace_counts,
+        "poset_cover": poset_cover
+    })
+
+# Invert event_dict for output (int -> name)
+inverted_dict = {str(v): k for k, v in event_dict.items()}
+
+output = {
+    "event_dictionary": inverted_dict,
+    "groups": groups
+}
+
+output_path = "output.json.gz"
+with gzip.open(output_path, 'wt', encoding='utf-8') as f:
+    json.dump(output, f)
+
+print(f"Output written to {output_path}")

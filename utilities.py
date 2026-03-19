@@ -252,9 +252,11 @@ def check_solution_to_instance(
 
     if instance == lo_solution:
         print("Yay! The solution is correct!\n")
+        return True
     else:
         print("Boo! The solution is wrong!")
         print("Here are the linear orders of the instance: ")
         print(instance, "\n")
         print("Here are the linear orders of the solution: ")
         print(lo_solution, "\n")
+        return False
