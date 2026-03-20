@@ -2,3 +2,7 @@
 /test.txt
 /output.json.gz
 /output.json
+/trimmed_input.json.gz
+/trimmed_input.json
+/trimmed_input.xes.gz
+/trimmed_input.xes

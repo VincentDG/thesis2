@@ -25,7 +25,9 @@ with gzip.open(rel_path, 'rb') as f_in:
 # This section of the code opens the dataset
 with open(rel_path[:-3], 'rb') as dataset:
     contents = dataset.read()
-contents = str(contents)
+
+contents = contents.decode('utf-8')         # Changed format for XES generation
+contents_original = contents            # Preserves a copy of the original
 
 # This section of the code looks for trace logs and saves the contents of each trace into an array
 traces = []
@@ -280,8 +282,25 @@ for trace in traces:
     if trace_name in trace_ids:
         trimmed_input.append(trace)
 
-trimmed_input_path = "trimmed_input.json.gz"
-with gzip.open(trimmed_input_path, 'wt', encoding='utf-8') as f:
-    json.dump(trimmed_input, f)
+# trimmed_input_path = "trimmed_input.json.gz"
+# with gzip.open(trimmed_input_path, 'wt', encoding='utf-8') as f:
+#     json.dump(trimmed_input, f)
 
-print(f"Trimmed dataset written to {trimmed_input_path}")
+# print(f"Trimmed dataset written to {trimmed_input_path}")
+
+# Changed output of dataset to a .xes file.
+# This part of the code extracts everything before the first trace (<trace>)
+first_trace = re.search("<trace>", contents_original)
+log_header = contents_original[:first_trace.start()]
+
+# This part of the code extracts everything after the last trace (</trace>)
+last_trace_end = contents_original.rfind("</trace>")
+log_footer = contents_original[last_trace_end + len("</trace>"):]
+
+# Reconstructing the trimmed XES
+trimmed_xes = log_header + "".join(trimmed_input) + log_footer
+trimmed_xes_path = "trimmed_input.xes.gz"
+with gzip.open(trimmed_xes_path, 'wt', encoding='utf-8') as f:
+    f.write(trimmed_xes)
+
+print(f"Trimmed dataset written to {trimmed_xes_path}")

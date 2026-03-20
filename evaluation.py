@@ -5,7 +5,7 @@ import time
 import networkx as nx
 
 OUTPUT_PATH = "output.json.gz"
-ORIGINAL_PATH = "trimmed_input.json.gz"
+ORIGINAL_PATH = "trimmed_input.xes.gz"
 
 dirname = os.path.dirname(__file__)
 dataset_folder = "Sepsis Cases - Event Log_1_all"
@@ -107,9 +107,14 @@ def check_event_sets(compressed_path):
 
 # --- Run all ---
 if __name__ == "__main__":
-    print("=== SIZE ===")
+
+    print("=== SIZE (ORIGINAL XES)===")
+    measure_size(rel_path, OUTPUT_PATH)
+    print("\n=== SIZE (TRIMMED XES, NO CYCLES)===")
     measure_size(ORIGINAL_PATH, OUTPUT_PATH)
-    print("\n=== SPEED ===")
+    print("\n=== SPEED (ORIGINAL XES) ===")
+    measure_speed(rel_path, OUTPUT_PATH)
+    print("\n=== SPEED (TRIMMED XES, NO CYCLES) ===")
     measure_speed(ORIGINAL_PATH, OUTPUT_PATH)
     print("\n=== CORRECTNESS ===")
     measure_correctness(OUTPUT_PATH)
