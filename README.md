@@ -29,7 +29,7 @@ poset_compression/
 ├── data/
 |    ├── raw_logs/
 |    ├── compressed/
-|    ├└── decompressed/
+|    └── decompressed/
 |
 ├── src/
 |    ├── log_loader.py
