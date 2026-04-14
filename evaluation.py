@@ -14,7 +14,6 @@ rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
 
 # ORIGINAL_PATH = rel_path 
 
-
 # --- Size ---
 def measure_size(original_path, compressed_path):
     original_bits = os.path.getsize(original_path) * 8

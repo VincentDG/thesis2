@@ -11,37 +11,33 @@ from imports.app.posetutils import PosetUtils
 import json
 import time
 
+# t0 = time.perf_counter()
+# print("Breakpoint A")
+
+
+# t1 = time.perf_counter()
+# print(f"Breakpoint B - {t1-t0:.2f}s")
+
+
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
-dataset_folder = "Sepsis Cases - Event Log_1_all"
-dataset_filename = "Sepsis Cases - Event Log.xes.gz"
+dataset_folder = "Road Traffic Fine Management Process_1_all"
+dataset_filename = "Road_Traffic_Fine_Management_Process.xes.gz"
+# dataset_folder = "Sepsis Cases - Event Log_1_all"
+# dataset_filename = "Sepsis Cases - Event Log.xes.gz"
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
-with gzip.open(rel_path, 'rb') as f_in:
-    with open(rel_path[:-3], 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
-
-# This section of the code opens the dataset
-with open(rel_path[:-3], 'rb') as dataset:
-    contents = dataset.read()
-
-contents = contents.decode('utf-8')         # Changed format for XES generation
-contents_original = contents            # Preserves a copy of the original
+# The previous code was optimized to skip file decompression to disk and just reads the contents of the .gz file.
+with gzip.open(rel_path, 'rt', encoding='utf-8') as f:
+    contents = f.read()
 
 # This section of the code looks for trace logs and saves the contents of each trace into an array
+# The change is an optimized version of the search algorithm that goes through all the traces in one pass and stops string copying.
 traces = []
-i = 0
-while re.search("<trace>", contents):
-    x = re.search("<trace>", contents)
-    y = re.search("</trace>", contents)
-    start = x.start()
-    i = y.end()
-    traces.append(contents[start:i])
-    contents = contents[i:]
+traces = re.findall(r"<trace>.*?</trace>", contents, re.DOTALL)
 
 # This section of the code looks through each trace to extract its name and saves it to an array
-# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
 event_log = {
     "traces": {
         "metadata": [],
@@ -51,6 +47,8 @@ event_log = {
         }
     }
  }
+
+# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
 for trace in traces:
     x = re.search("string key=\"concept:name\" value=\"", trace)
     x_end = x.end()
@@ -87,6 +85,7 @@ for trace in event_log["traces"]["events"]["contents"]:
         events_metadata.append(metadata)
     event_log["traces"]["events"]["metadata"].append(events_metadata)
 
+
 # This section of the code checks for duplicate events (looping)
 # nl means No Loops
 nl_traces = []
@@ -102,17 +101,36 @@ for idx_trace, trace in enumerate(event_log["traces"]["events"]["metadata"]):
         nl_traces.append(trace)
         trace_ids.append(event_log["traces"]["metadata"][idx_trace])
 
+print("Number of traces after preprocessing:", len(nl_traces))
+
+
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
-date_format = "%Y-%m-%dT%H:%M:%S.%f"
+
+date_formats = [
+    "%Y-%m-%dT%H:%M:%S.%f",
+    "%Y-%m-%dT%H:%M:%S"
+]
+
+def parse_timestamp(timestamp_str):
+    # Remove timezone offset
+    clean = re.sub(r'([+-]\d{2}:\d{2}|Z)$', '', timestamp_str)
+    for fmt in date_formats:
+        try:
+            return dt.strptime(clean, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f"Unrecognized timestamp format: {timestamp_str}")    
+
 dt_traces = []
 for trace in nl_traces:
     events = []
     for event in trace:
-        date_object = dt.strptime(event[1][:-6], date_format) #make sure this works for other datasets
+        date_object = parse_timestamp(event[1]) 
         new_event = [event[0], date_object]
         events.append(new_event)
     dt_traces.append(events)
+
 
 # This section groups traces via the set of events they have
 # grp means Grouped
@@ -185,8 +203,11 @@ for grp_no in range(len(co_grp_traces)):
         if len(current_block) > 1:
             concurrency_list.append([grp_no, trace_no, current_block])
 
+print("Number of concurrencies:", len(concurrency_list))
+
 # Map index from concurrency list to its actual event
 c_no = 0
+l = 0
 for concurrency in concurrency_list:
     grp_no, trace_no, indices = concurrency[0], concurrency[1], concurrency[2]
     linear_order = grouped_linear_orders[grp_no][trace_no]
@@ -205,6 +226,7 @@ for concurrency in concurrency_list:
         for idx, val in zip(indices, permutation):
             new_order[idx] = val
         linear_extensions.append(new_order)
+        l += 1
     
     grp = grouped_linear_orders[grp_no]
 
@@ -214,16 +236,26 @@ for concurrency in concurrency_list:
 
     c_no += 1
 
+print("Number of generated permutations:", l)
+
 # This section of the code is for solving each instance of the poset cover problem
 hasse_diagram_list = []
-for group in grouped_linear_orders:   
-    upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
+total_groups = len(grouped_linear_orders)
+for grp_idx, group in enumerate(grouped_linear_orders):
+    t_start = time.perf_counter()
+
+    # upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
+
+    upsilon = list(set([tuple(order) for order in group]))      # Optimization: deduplicates upsilon before passing it in.
+
+    print(f"Group {grp_idx + 1}/{total_groups} — {len(group)} traces, "
+      f"{len(upsilon)} unique — solving...")
+
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
     result_posets = [
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
  
-    ## !!! potential error coming from here !!!
     ## This section of the code gets the Hasse diagram of each poset in the poset cover (simply to apply transitive reduction)
     hasse_posets = []
     for result in result_posets:
@@ -232,6 +264,10 @@ for group in grouped_linear_orders:
     
     ## This section of the code appends the Hasse diagrams of each poset block to the master list
     hasse_diagram_list.append(hasse_posets)
+
+    t_end = time.perf_counter()
+    print(f"Group {grp_idx + 1}/{total_groups} — {len(group)} traces, "
+          f"{len(hasse_posets)} posets — {t_end - t_start:.2f}s")
 
 # Outputting
 groups = []
@@ -264,6 +300,8 @@ output = {
     "groups": groups
 }
 
+print("Group length:", len(groups))
+
 output_path = "output.json.gz"
 with gzip.open(output_path, 'wt', encoding='utf-8') as f:
     json.dump(output, f)
@@ -290,12 +328,12 @@ for trace in traces:
 
 # Changed output of dataset to a .xes file.
 # This part of the code extracts everything before the first trace (<trace>)
-first_trace = re.search("<trace>", contents_original)
-log_header = contents_original[:first_trace.start()]
+first_trace = re.search("<trace>", contents)
+log_header = contents[:first_trace.start()]
 
 # This part of the code extracts everything after the last trace (</trace>)
-last_trace_end = contents_original.rfind("</trace>")
-log_footer = contents_original[last_trace_end + len("</trace>"):]
+last_trace_end = contents.rfind("</trace>")
+log_footer = contents[last_trace_end + len("</trace>"):]
 
 # Reconstructing the trimmed XES
 trimmed_xes = log_header + "".join(trimmed_input) + log_footer
