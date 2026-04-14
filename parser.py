@@ -21,11 +21,28 @@ import time
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
-dataset_folder = "Road Traffic Fine Management Process_1_all"
-dataset_filename = "Road_Traffic_Fine_Management_Process.xes.gz"
-# dataset_folder = "Sepsis Cases - Event Log_1_all"
-# dataset_filename = "Sepsis Cases - Event Log.xes.gz"
-rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
+var = 'G5'   # change this variable to match the dataset used
+dataset_folder = {
+    'A': "Sepsis Cases - Event Log_1_all",
+    'B': "Road Traffic Fine Management Process_1_all",
+    'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
+    'G2': "BPI Challenge 2020_ International Declarations_1_all",
+    'G3': "BPI Challenge 2020_ Prepaid Travel Costs_1_all",
+    'G4': "BPI Challenge 2020_ Request For Payment_1_all",
+    'G5': "BPI Challenge 2020_ Travel Permit Data_1_all"
+}
+
+dataset_filename = {
+    'A': "Sepsis Cases - Event Log.xes.gz",
+    'B': "Road_Traffic_Fine_Management_Process.xes.gz",
+    'G1': "DomesticDeclarations.xes.gz",
+    'G2': "InternationalDeclarations.xes.gz",
+    'G3': "PrepaidTravelCost.xes.gz",
+    'G4': "RequestForPayment.xes.gz",
+    'G5': "PermitLog.xes.gz"
+}
+
+rel_path = os.path.join(dirname, 'Datasets', dataset_folder[var], dataset_filename[var])
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
 # The previous code was optimized to skip file decompression to disk and just reads the contents of the .gz file.
@@ -106,7 +123,7 @@ print("Number of traces after preprocessing:", len(nl_traces))
 
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
-
+"2017-01-10T09:34:44.000+01:00"
 date_formats = [
     "%Y-%m-%dT%H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S"
@@ -241,12 +258,14 @@ print("Number of generated permutations:", l)
 # This section of the code is for solving each instance of the poset cover problem
 hasse_diagram_list = []
 total_groups = len(grouped_linear_orders)
+lo_count = 0
 for grp_idx, group in enumerate(grouped_linear_orders):
     t_start = time.perf_counter()
 
     # upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
 
     upsilon = list(set([tuple(order) for order in group]))      # Optimization: deduplicates upsilon before passing it in.
+    lo_count += len(upsilon)
 
     print(f"Group {grp_idx + 1}/{total_groups} — {len(group)} traces, "
       f"{len(upsilon)} unique — solving...")
@@ -301,6 +320,7 @@ output = {
 }
 
 print("Group length:", len(groups))
+print("Number of linear orders: " + str(lo_count)) # obtained by summating the len of upsilon for all groups
 
 output_path = "output.json.gz"
 with gzip.open(output_path, 'wt', encoding='utf-8') as f:
