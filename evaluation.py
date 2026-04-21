@@ -8,10 +8,12 @@ OUTPUT_PATH = "output.json.gz"
 ORIGINAL_PATH = "trimmed_input.xes.gz"
 
 dirname = os.path.dirname(__file__)
-var = 'G5'   # change this variable to match the dataset used
+var = 'G1'   # change this variable to match the dataset used
 dataset_folder = {
     'A': "Sepsis Cases - Event Log_1_all",
     'B': "Road Traffic Fine Management Process_1_all",
+    'D': "BPI Challenge 2017_1_all",
+    'E': "BPI Challenge 2018_1_all",
     'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
     'G2': "BPI Challenge 2020_ International Declarations_1_all",
     'G3': "BPI Challenge 2020_ Prepaid Travel Costs_1_all",
@@ -22,6 +24,8 @@ dataset_folder = {
 dataset_filename = {
     'A': "Sepsis Cases - Event Log.xes.gz",
     'B': "Road_Traffic_Fine_Management_Process.xes.gz",
+    'D': "BPI Challenge 2017.xes.gz",
+    'E': "BPI Challenge 2018.xes.gz",
     'G1': "DomesticDeclarations.xes.gz",
     'G2': "InternationalDeclarations.xes.gz",
     'G3': "PrepaidTravelCost.xes.gz",

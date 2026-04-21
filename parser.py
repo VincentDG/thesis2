@@ -21,10 +21,12 @@ import time
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
-var = 'G5'   # change this variable to match the dataset used
+var = 'G1'   # change this variable to match the dataset used
 dataset_folder = {
     'A': "Sepsis Cases - Event Log_1_all",
     'B': "Road Traffic Fine Management Process_1_all",
+    'D': "BPI Challenge 2017_1_all",
+    'E': "BPI Challenge 2018_1_all",
     'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
     'G2': "BPI Challenge 2020_ International Declarations_1_all",
     'G3': "BPI Challenge 2020_ Prepaid Travel Costs_1_all",
@@ -35,6 +37,8 @@ dataset_folder = {
 dataset_filename = {
     'A': "Sepsis Cases - Event Log.xes.gz",
     'B': "Road_Traffic_Fine_Management_Process.xes.gz",
+    'D': "BPI Challenge 2017.xes.gz",
+    'E': "BPI Challenge 2018.xes.gz",
     'G1': "DomesticDeclarations.xes.gz",
     'G2': "InternationalDeclarations.xes.gz",
     'G3': "PrepaidTravelCost.xes.gz",
@@ -53,6 +57,7 @@ with gzip.open(rel_path, 'rt', encoding='utf-8') as f:
 # The change is an optimized version of the search algorithm that goes through all the traces in one pass and stops string copying.
 traces = []
 traces = re.findall(r"<trace>.*?</trace>", contents, re.DOTALL)
+print("Number of traces before preprocessing: " + str(len(traces)))
 
 # This section of the code looks through each trace to extract its name and saves it to an array
 event_log = {
@@ -347,16 +352,16 @@ for trace in traces:
 # print(f"Trimmed dataset written to {trimmed_input_path}")
 
 # Changed output of dataset to a .xes file.
-# This part of the code extracts everything before the first trace (<trace>)
-first_trace = re.search("<trace>", contents)
-log_header = contents[:first_trace.start()]
+### This part of the code extracts everything before the first trace (<trace>)
+###first_trace = re.search("<trace>", contents)
+###log_header = contents[:first_trace.start()]
 
-# This part of the code extracts everything after the last trace (</trace>)
-last_trace_end = contents.rfind("</trace>")
-log_footer = contents[last_trace_end + len("</trace>"):]
+### This part of the code extracts everything after the last trace (</trace>)
+###last_trace_end = contents.rfind("</trace>")
+###log_footer = contents[last_trace_end + len("</trace>"):]
 
 # Reconstructing the trimmed XES
-trimmed_xes = log_header + "".join(trimmed_input) + log_footer
+trimmed_xes = "".join(trimmed_input)
 trimmed_xes_path = "trimmed_input.xes.gz"
 with gzip.open(trimmed_xes_path, 'wt', encoding='utf-8') as f:
     f.write(trimmed_xes)
