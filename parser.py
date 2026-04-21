@@ -128,7 +128,6 @@ print("Number of traces after preprocessing:", len(nl_traces))
 
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
-"2017-01-10T09:34:44.000+01:00"
 date_formats = [
     "%Y-%m-%dT%H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S"
