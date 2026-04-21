@@ -4,6 +4,9 @@ import copy
 from .posetutils import PosetUtils
 from .classes import *
 
+import math
+import time
+from datetime import datetime as dt
 
 class PosetSolver:
     @staticmethod
@@ -65,6 +68,9 @@ class PosetSolver:
         n = len(upsilon)
         result: list[LinearExtensions] | None = None
         for k in range(1, n + 1):
+            print(f"[{dt.now().strftime('%H:%M:%S')}] Trying k={k} (n={n})...")  #ADDED
+            t_k = time.perf_counter()               # ADDED
+
             if k == 1:
                 convex = PosetUtils.generate_convex(upsilon)
                 if set(convex) == set(upsilon):
@@ -73,6 +79,10 @@ class PosetSolver:
                 result = [[linear_order] for linear_order in upsilon]
             else:
                 result = PosetSolver.exact_k_poset_cover(upsilon, k)
+
+            print(f"[{dt.now().strftime('%H:%M:%S')}] k={k} done in "
+                f"{time.perf_counter()-t_k:.2f}s — "
+                f"{'found' if result else 'not found'}")             # ADDED
 
             if verbose and result:
                 print(f"Found a {k}-poset cover")
@@ -127,9 +137,21 @@ class PosetSolver:
         if verbose:
             print(f"ATG Edges (directed): {directed_atg_edges}\n")
 
-        A_star = combinations(directed_atg_edges, k - 1)
+        total_combinations = math.comb(len(directed_atg_edges), k - 1)
+        print(f"  k={k}: checking {total_combinations} combinations "
+            f"({len(directed_atg_edges)} edges, choose {k-1})...")
+
+        t_k = time.perf_counter()
+
         legs: set[frozenset[LinearOrder]] = set()
-        for anchor_pairs in A_star:
+        for combo_idx, anchor_pairs in enumerate(combinations(directed_atg_edges, k - 1)):
+            if combo_idx % 100 == 0 and combo_idx > 0:
+                elapsed = time.perf_counter() - t_k
+                rate = combo_idx / elapsed
+                remaining = (total_combinations - combo_idx) / rate if rate > 0 else 0
+                print(f"  k={k}: {combo_idx}/{total_combinations} combinations "
+                    f"({elapsed:.1f}s elapsed, ~{remaining/60:.1f} min remaining)...")
+
             upsilon_A: set[LinearOrder] = set()
             for linear_order in upsilon:
                 linear_order_follows_anchor_pairs = all(

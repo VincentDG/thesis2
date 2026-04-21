@@ -23,8 +23,6 @@ import time
 dirname = os.path.dirname(__file__)
 dataset_folder = "Road Traffic Fine Management Process_1_all"
 dataset_filename = "Road_Traffic_Fine_Management_Process.xes.gz"
-# dataset_folder = "Sepsis Cases - Event Log_1_all"
-# dataset_filename = "Sepsis Cases - Event Log.xes.gz"
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
@@ -48,43 +46,76 @@ event_log = {
     }
  }
 
-# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
-for trace in traces:
-    x = re.search("string key=\"concept:name\" value=\"", trace)
-    x_end = x.end()
-    name_end = re.search("\"/>", trace[x_end:])
-    trace_name = trace[x_end:x_end + name_end.start()]
-    event_log["traces"]["metadata"].append(trace_name)
+def extract_attribute(text, key):
+    """Fallback extractor for logs using ></tag> closing style."""
+    pattern = f'key="{key}" value="([^"]*)"'
+    match = re.search(pattern, text)
+    if match:
+        return match.group(1)
+    return None
 
-    i = 0
-    event_contents = []
-    while re.search("<event>", trace):
-        x = re.search("<event>", trace)
-        y = re.search("</event>", trace)
-        start = x.start()
-        i = y.end()
-        event_contents.append(trace[start:i])
-        trace = trace[i:]
+def get_trace_name(trace):
+    # Try stable approach first
+    x = re.search("string key=\"concept:name\" value=\"", trace)
+    if x:
+        x_end = x.end()
+        name_end = re.search("\"/>", trace[x_end:])
+        if name_end:
+            return trace[x_end:x_end + name_end.start()]
+    # Fallback for ></string> closing style
+    return extract_attribute(trace, "concept:name")
+
+def get_event_name(event):
+    x = re.search("string key=\"concept:name\" value=\"", event)
+    if x:
+        x_end = x.end()
+        name_end = re.search("\"/>", event[x_end:])
+        if name_end:
+            return event[x_end:x_end + name_end.start()]
+    return extract_attribute(event, "concept:name")
+
+def get_event_timestamp(event):
+    x = re.search("date key=\"time:timestamp\" value=\"", event)
+    if x:
+        x_end = x.end()
+        date_end = re.search("\"/>", event[x_end:])
+        if date_end:
+            return event[x_end:x_end + date_end.start()]
+    return extract_attribute(event, "time:timestamp")
+
+# This section of the code looks for events in each trace log and saves the contents of each event into an array of arrays
+# Trace name extraction
+for trace in traces:
+    trace_name = get_trace_name(trace)
+    if trace_name is None:
+        continue
+    event_log["traces"]["metadata"].append(trace_name)
+    event_contents = re.findall(r"<event>.*?</event>", trace, re.DOTALL)
     event_log["traces"]["events"]["contents"].append(event_contents)
 
 # This section of the code extracts the name and timestamp of each event and saves it as a pair in an array
 for trace in event_log["traces"]["events"]["contents"]:
     events_metadata = []
     for event in trace:
-        # extracting name
-        x = re.search("string key=\"concept:name\" value=\"", event)
-        x_end = x.end()
-        name_end = re.search("\"/>", event[x_end:])
-        event_name = event[x_end:x_end + name_end.start()]
-        # extracting timestamp
-        x = re.search("date key=\"time:timestamp\" value=\"", event)
-        x_end = x.end()
-        date_end = re.search("\"/>", event[x_end:])
-        event_date = event[x_end:x_end + date_end.start()]
-        metadata = [event_name, event_date]
-        events_metadata.append(metadata)
+        event_name = get_event_name(event)
+        event_date = get_event_timestamp(event)
+        if event_name is None or event_date is None:
+            continue
+        events_metadata.append([event_name, event_date])
     event_log["traces"]["events"]["metadata"].append(events_metadata)
 
+# # DEBUG - check first trace's events
+# if event_log["traces"]["events"]["metadata"]:
+#     print("First trace events:", event_log["traces"]["events"]["metadata"][0])
+# else:
+#     print("No events parsed at all")
+
+# After event extraction, before cycle detection
+print("Trace count:", len(event_log["traces"]["metadata"]))
+print("Event content count:", len(event_log["traces"]["events"]["contents"]))
+print("Event metadata count:", len(event_log["traces"]["events"]["metadata"]))
+print("First trace event count:", len(event_log["traces"]["events"]["contents"][0]))
+print("First trace metadata count:", len(event_log["traces"]["events"]["metadata"][0]))
 
 # This section of the code checks for duplicate events (looping)
 # nl means No Loops
@@ -239,19 +270,32 @@ for concurrency in concurrency_list:
 print("Number of generated permutations:", l)
 
 # This section of the code is for solving each instance of the poset cover problem
+THRESHOLD = 20 # to be decided
+
 hasse_diagram_list = []
 total_groups = len(grouped_linear_orders)
+upsilon_sum = 0
 for grp_idx, group in enumerate(grouped_linear_orders):
     t_start = time.perf_counter()
 
-    # upsilon = [tuple(order) for order in group]                 # Converted to tuple to support networkX
-
     upsilon = list(set([tuple(order) for order in group]))      # Optimization: deduplicates upsilon before passing it in.
 
-    print(f"Group {grp_idx + 1}/{total_groups} — {len(group)} traces, "
-      f"{len(upsilon)} unique — solving...")
+    # t_solving_start = time.perf_counter()
+    # print(f"Group {grp_idx + 1}/{total_groups} — {len(group)} traces, "
+    #   f"{len(upsilon)} unique — solving...")
+    
+
+    # if len(upsilon) > THRESHOLD:
+    #     print(f"Group {grp_idx + 1} skipped - too many unique traces")
+    #     hasse_diagram_list.append([])
+    #     continue
 
     result_linear_orders = PosetSolver.minimum_poset_cover(upsilon)
+    
+    # t_solving_end = time.perf_counter()
+    # print(f"[{dt.now().strftime('%H:%M:%S')}] Group {grp_idx + 1}/{total_groups} — "
+    #       f"solved in {t_solving_end - t_solving_start:.2f}s")
+    
     result_posets = [
         PosetUtils.get_partial_order_of_convex(leg) for leg in result_linear_orders
     ]
@@ -268,6 +312,10 @@ for grp_idx, group in enumerate(grouped_linear_orders):
     t_end = time.perf_counter()
     print(f"Group {grp_idx + 1}/{total_groups} — {len(group)} traces, "
           f"{len(hasse_posets)} posets — {t_end - t_start:.2f}s")
+
+    upsilon_sum += len(upsilon)
+
+print("Summation of Upsilon: ", upsilon_sum)
 
 # Outputting
 groups = []
@@ -311,20 +359,11 @@ print(f"Output written to {output_path}")
 # This part of the code iterates through the original array of traces, and trimming traces whose IDs are not in trace_ids
 # which is the set of traces representable as posets
 trimmed_input = []
+trace_ids_set = set(trace_ids)
 for trace in traces:
-    x = re.search("string key=\"concept:name\" value=\"", trace)
-    x_end = x.end()
-    name_end = re.search("\"/>", trace[x_end:])
-    trace_name = trace[x_end:x_end + name_end.start()]
-
-    if trace_name in trace_ids:
+    trace_name = extract_attribute(trace, "concept:name")
+    if trace_name in trace_ids_set:
         trimmed_input.append(trace)
-
-# trimmed_input_path = "trimmed_input.json.gz"
-# with gzip.open(trimmed_input_path, 'wt', encoding='utf-8') as f:
-#     json.dump(trimmed_input, f)
-
-# print(f"Trimmed dataset written to {trimmed_input_path}")
 
 # Changed output of dataset to a .xes file.
 # This part of the code extracts everything before the first trace (<trace>)
