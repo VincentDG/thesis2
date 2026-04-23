@@ -74,6 +74,7 @@ def measure_correctness(compressed_path):
         data = json.load(f)
 
     all_correct = True
+    mismatch_count = 0
     for grp_idx, group in enumerate(data["groups"]):
         # Reconstruct original traces from trace_counts
         original_traces = set()
@@ -93,14 +94,18 @@ def measure_correctness(compressed_path):
             print(f"Group {grp_idx}: Correct")
         else:
             print(f"Group {grp_idx}: MISMATCH")
-            print(f"  Original:  {original_traces}")
-            print(f"  Generated: {generated_traces}")
+            # print(f"  Original:  {original_traces}")
+            # print(f"  Generated: {generated_traces}")
+            mismatch_count += 1
             all_correct = False
 
     if all_correct:
         print("\nAll groups correct!")
     else:
         print("\nSome groups have mismatches.")
+    
+    print("Total groups: ", len(data["groups"]))
+    print("Correct groups: ", len(data["groups"]) - mismatch_count)
 
     return all_correct
 
@@ -109,6 +114,7 @@ def check_event_sets(compressed_path):
         data = json.load(f)
     
     all_correct = True
+    mismatch_count = 0
     for grp_idx, group in enumerate(data["groups"]):
         event_set = set(tuple(group["event_set"]))
         le_str = list(group["trace_counts"].keys())[0][1:-1].split(", ")
@@ -118,8 +124,9 @@ def check_event_sets(compressed_path):
             print(f"Group {grp_idx}: Correct")
         else:
             print(f"Group {grp_idx}: MISMATCH")
-            print(f"  Event set:  {event_set}")
-            print(f"  Extension: {le_set}")
+            # print(f"  Event set:  {event_set}")
+            # print(f"  Extension: {le_set}")
+            mismatch_count += 1
             all_correct = False
     if all_correct:
         print("\nAll groups correct!")
