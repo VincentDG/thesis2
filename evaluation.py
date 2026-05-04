@@ -8,8 +8,8 @@ OUTPUT_PATH = "output.json.gz"
 ORIGINAL_PATH = "trimmed_input.xes.gz"
 
 dirname = os.path.dirname(__file__)
-dataset_folder = "BPI_Challenge_2019"
-dataset_filename = "BPI_Challenge_2019.xes"
+dataset_folder = "Road Traffic Fine Management Process_1_all"
+dataset_filename = "Road_Traffic_Fine_Management_Process.xes.gz"
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
 
 # ORIGINAL_PATH = rel_path 

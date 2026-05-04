@@ -21,8 +21,8 @@ import time
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
-dataset_folder = "Road Traffic Fine Management Process_1_all"
-dataset_filename = "Road_Traffic_Fine_Management_Process.xes.gz"
+dataset_folder = "BPI_Challenge_2019"
+dataset_filename = "BPI_Challenge_2019.xes.gz"
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
