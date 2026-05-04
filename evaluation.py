@@ -8,9 +8,37 @@ OUTPUT_PATH = "output.json.gz"
 ORIGINAL_PATH = "trimmed_input.xes.gz"
 
 dirname = os.path.dirname(__file__)
+<<<<<<< HEAD
 dataset_folder = "Road Traffic Fine Management Process_1_all"
 dataset_filename = "Road_Traffic_Fine_Management_Process.xes.gz"
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
+=======
+var = 'G1'   # change this variable to match the dataset used
+dataset_folder = {
+    'A': "Sepsis Cases - Event Log_1_all",
+    'B': "Road Traffic Fine Management Process_1_all",
+    'D': "BPI Challenge 2017_1_all",
+    'E': "BPI Challenge 2018_1_all",
+    'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
+    'G2': "BPI Challenge 2020_ International Declarations_1_all",
+    'G3': "BPI Challenge 2020_ Prepaid Travel Costs_1_all",
+    'G4': "BPI Challenge 2020_ Request For Payment_1_all",
+    'G5': "BPI Challenge 2020_ Travel Permit Data_1_all"
+}
+
+dataset_filename = {
+    'A': "Sepsis Cases - Event Log.xes.gz",
+    'B': "Road_Traffic_Fine_Management_Process.xes.gz",
+    'D': "BPI Challenge 2017.xes.gz",
+    'E': "BPI Challenge 2018.xes.gz",
+    'G1': "DomesticDeclarations.xes.gz",
+    'G2': "InternationalDeclarations.xes.gz",
+    'G3': "PrepaidTravelCost.xes.gz",
+    'G4': "RequestForPayment.xes.gz",
+    'G5': "PermitLog.xes.gz"
+}
+rel_path = os.path.join(dirname, 'Datasets', dataset_folder[var], dataset_filename[var])
+>>>>>>> 8bbc6bd3c2c0e79cca2d063d615cc3dc7f3522e6
 
 # ORIGINAL_PATH = rel_path 
 

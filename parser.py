@@ -21,9 +21,38 @@ import time
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
+<<<<<<< HEAD
 dataset_folder = "BPI_Challenge_2019"
 dataset_filename = "BPI_Challenge_2019.xes.gz"
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
+=======
+var = 'G1'   # change this variable to match the dataset used
+dataset_folder = {
+    'A': "Sepsis Cases - Event Log_1_all",
+    'B': "Road Traffic Fine Management Process_1_all",
+    'D': "BPI Challenge 2017_1_all",
+    'E': "BPI Challenge 2018_1_all",
+    'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
+    'G2': "BPI Challenge 2020_ International Declarations_1_all",
+    'G3': "BPI Challenge 2020_ Prepaid Travel Costs_1_all",
+    'G4': "BPI Challenge 2020_ Request For Payment_1_all",
+    'G5': "BPI Challenge 2020_ Travel Permit Data_1_all"
+}
+
+dataset_filename = {
+    'A': "Sepsis Cases - Event Log.xes.gz",
+    'B': "Road_Traffic_Fine_Management_Process.xes.gz",
+    'D': "BPI Challenge 2017.xes.gz",
+    'E': "BPI Challenge 2018.xes.gz",
+    'G1': "DomesticDeclarations.xes.gz",
+    'G2': "InternationalDeclarations.xes.gz",
+    'G3': "PrepaidTravelCost.xes.gz",
+    'G4': "RequestForPayment.xes.gz",
+    'G5': "PermitLog.xes.gz"
+}
+
+rel_path = os.path.join(dirname, 'Datasets', dataset_folder[var], dataset_filename[var])
+>>>>>>> 8bbc6bd3c2c0e79cca2d063d615cc3dc7f3522e6
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
 # The previous code was optimized to skip file decompression to disk and just reads the contents of the .gz file.
@@ -34,6 +63,7 @@ with gzip.open(rel_path, 'rt', encoding='utf-8') as f:
 # The change is an optimized version of the search algorithm that goes through all the traces in one pass and stops string copying.
 traces = []
 traces = re.findall(r"<trace>.*?</trace>", contents, re.DOTALL)
+print("Number of traces before preprocessing: " + str(len(traces)))
 
 # This section of the code looks through each trace to extract its name and saves it to an array
 event_log = {
@@ -137,7 +167,6 @@ print("Number of traces after preprocessing:", len(nl_traces))
 
 # This section of the code formats the timestamp into a manipulable object
 # dt means datetime 
-
 date_formats = [
     "%Y-%m-%dT%H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S"
@@ -349,6 +378,7 @@ output = {
 }
 
 print("Group length:", len(groups))
+print("Number of linear orders: " + str(lo_count)) # obtained by summating the len of upsilon for all groups
 
 output_path = "output.json.gz"
 with gzip.open(output_path, 'wt', encoding='utf-8') as f:
@@ -366,16 +396,16 @@ for trace in traces:
         trimmed_input.append(trace)
 
 # Changed output of dataset to a .xes file.
-# This part of the code extracts everything before the first trace (<trace>)
-first_trace = re.search("<trace>", contents)
-log_header = contents[:first_trace.start()]
+### This part of the code extracts everything before the first trace (<trace>)
+###first_trace = re.search("<trace>", contents)
+###log_header = contents[:first_trace.start()]
 
-# This part of the code extracts everything after the last trace (</trace>)
-last_trace_end = contents.rfind("</trace>")
-log_footer = contents[last_trace_end + len("</trace>"):]
+### This part of the code extracts everything after the last trace (</trace>)
+###last_trace_end = contents.rfind("</trace>")
+###log_footer = contents[last_trace_end + len("</trace>"):]
 
 # Reconstructing the trimmed XES
-trimmed_xes = log_header + "".join(trimmed_input) + log_footer
+trimmed_xes = "".join(trimmed_input)
 trimmed_xes_path = "trimmed_input.xes.gz"
 with gzip.open(trimmed_xes_path, 'wt', encoding='utf-8') as f:
     f.write(trimmed_xes)
