@@ -407,7 +407,8 @@ def trim_event_data(event):
     if x and y:
         event_data = "\n".join([x,y])
         event_new = "\n".join(["<event>", event_data, "</event>"])
-    return event_new
+        return event_new
+    return None
 
 def trim_trace_data(trace):
     z = re.search(r"<string key=\"concept:name\".*?>", trace)
@@ -417,7 +418,8 @@ def trim_trace_data(trace):
     trimmed_events = []
     for event in event_contents:
         event_new = trim_event_data(event)
-        trimmed_events.append(event_new)
+        if event_new:
+            trimmed_events.append(event_new)
     
     event_contents = "\n".join(trimmed_events)
     trimmed = "\n".join(["<trace>", z, event_contents, "</trace>"])
