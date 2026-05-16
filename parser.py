@@ -23,6 +23,7 @@ dataset_folder = {
     'C': "Hospital Billing - Event Log_1_all",
     'D': "BPI Challenge 2017_1_all",
     'E': "BPI Challenge 2018_1_all",
+    'F': "BPI Challenge 2019",
     'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
     'G2': "BPI Challenge 2020_ International Declarations_1_all",
     'G3': "BPI Challenge 2020_ Prepaid Travel Costs_1_all",
@@ -36,6 +37,7 @@ dataset_filename = {
     'C': "Hospital Billing - Event Log.xes.gz",
     'D': "BPI Challenge 2017.xes.gz",
     'E': "BPI Challenge 2018.xes.gz",
+    'F': "BPI_Challenge_2019.xes",
     'G1': "DomesticDeclarations.xes.gz",
     'G2': "InternationalDeclarations.xes.gz",
     'G3': "PrepaidTravelCost.xes.gz",
@@ -47,8 +49,13 @@ rel_path = os.path.join(dirname, 'Datasets', dataset_folder[var], dataset_filena
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
 # The previous code was optimized to skip file decompression to disk and just reads the contents of the .gz file.
-with gzip.open(rel_path, 'rt', encoding='utf-8') as f:
-    contents = f.read()
+if var == 'F':
+    with open(rel_path, 'rt') as f:
+        contents = f.read()
+
+else:
+    with gzip.open(rel_path, 'rt', encoding='utf-8') as f:
+        contents = f.read()
 
 # This section of the code looks for trace logs and saves the contents of each trace into an array
 # The change is an optimized version of the search algorithm that goes through all the traces in one pass and stops string copying.
@@ -369,7 +376,6 @@ output = {
 }
 
 print("Group length:", len(groups))
-# print("Number of linear orders: " + str(lo_count)) # obtained by summating the len of upsilon for all groups
 
 output_path = "output.json.gz"
 with gzip.open(output_path, 'wt', encoding='utf-8') as f:
@@ -379,21 +385,47 @@ print(f"Output written to {output_path}")
 
 # This part of the code iterates through the original array of traces, and trimming traces whose IDs are not in trace_ids
 # which is the set of traces representable as posets
+used_input = []
 trimmed_input = []
 trace_ids_set = set(trace_ids)
 for trace in traces:
     trace_name = extract_attribute(trace, "concept:name")
     if trace_name in trace_ids_set:
-        trimmed_input.append(trace)
+        used_input.append(trace)
 
-# Changed output of dataset to a .xes file.
-### This part of the code extracts everything before the first trace (<trace>)
-###first_trace = re.search("<trace>", contents)
-###log_header = contents[:first_trace.start()]
+##trace, concept:name
+##event, concept:name, <date key="time:timestamp"
 
-### This part of the code extracts everything after the last trace (</trace>)
-###last_trace_end = contents.rfind("</trace>")
-###log_footer = contents[last_trace_end + len("</trace>"):]
+def trim_event_data(event):
+    x = re.search(r"<date key=\"time:timestamp\".*?>", event)
+    x = x.group(0)
+    y = re.search(r"<string key=\"concept:name\".*?>", event)
+    y = y.group(0)
+    if x and y:
+        event_data = "\n".join([x,y])
+        event_new = "\n".join(["<event>", event_data, "</event>"])
+        return event_new
+    return None
+
+def trim_trace_data(trace):
+    z = re.search(r"<string key=\"concept:name\".*?>", trace)
+    z = z.group(0)
+    # look for all events and trim them via trim_event_data
+    event_contents = re.findall(r"<event>.*?</event>", trace, re.DOTALL)
+    trimmed_events = []
+    for event in event_contents:
+        event_new = trim_event_data(event)
+        if event_new:
+            trimmed_events.append(event_new)
+    
+    event_contents = "\n".join(trimmed_events)
+    trimmed = "\n".join(["<trace>", z, event_contents, "</trace>"])
+
+    return trimmed
+
+for trace in used_input:
+    new_trace = trim_trace_data(trace)
+    trimmed_input.append(new_trace)
 
 # Reconstructing the trimmed XES
 trimmed_xes = "".join(trimmed_input)

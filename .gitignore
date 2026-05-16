@@ -11,3 +11,6 @@
 /parser_stable.py
 /results
 /log.txt
+*.pyc
+*.zip
+*.zip
