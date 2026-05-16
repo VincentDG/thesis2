@@ -11,25 +11,16 @@ from imports.app.posetutils import PosetUtils
 import json
 import time
 
-# t0 = time.perf_counter()
-# print("Breakpoint A")
-
-
-# t1 = time.perf_counter()
-# print(f"Breakpoint B - {t1-t0:.2f}s")
-
+t0 = time.perf_counter()
+print("Breakpoint A")
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
-<<<<<<< HEAD
-dataset_folder = "BPI_Challenge_2019"
-dataset_filename = "BPI_Challenge_2019.xes.gz"
-rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
-=======
 var = 'G1'   # change this variable to match the dataset used
 dataset_folder = {
     'A': "Sepsis Cases - Event Log_1_all",
     'B': "Road Traffic Fine Management Process_1_all",
+    'C': "Hospital Billing - Event Log_1_all",
     'D': "BPI Challenge 2017_1_all",
     'E': "BPI Challenge 2018_1_all",
     'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
@@ -42,6 +33,7 @@ dataset_folder = {
 dataset_filename = {
     'A': "Sepsis Cases - Event Log.xes.gz",
     'B': "Road_Traffic_Fine_Management_Process.xes.gz",
+    'C': "Hospital Billing - Event Log.xes.gz",
     'D': "BPI Challenge 2017.xes.gz",
     'E': "BPI Challenge 2018.xes.gz",
     'G1': "DomesticDeclarations.xes.gz",
@@ -52,7 +44,6 @@ dataset_filename = {
 }
 
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder[var], dataset_filename[var])
->>>>>>> 8bbc6bd3c2c0e79cca2d063d615cc3dc7f3522e6
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
 # The previous code was optimized to skip file decompression to disk and just reads the contents of the .gz file.
@@ -378,7 +369,7 @@ output = {
 }
 
 print("Group length:", len(groups))
-print("Number of linear orders: " + str(lo_count)) # obtained by summating the len of upsilon for all groups
+# print("Number of linear orders: " + str(lo_count)) # obtained by summating the len of upsilon for all groups
 
 output_path = "output.json.gz"
 with gzip.open(output_path, 'wt', encoding='utf-8') as f:
@@ -411,3 +402,6 @@ with gzip.open(trimmed_xes_path, 'wt', encoding='utf-8') as f:
     f.write(trimmed_xes)
 
 print(f"Trimmed dataset written to {trimmed_xes_path}")
+
+t1 = time.perf_counter()
+print(f"Breakpoint B - {t1-t0:.2f}s")

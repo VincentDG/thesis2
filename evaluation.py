@@ -4,16 +4,11 @@ import os
 import time
 import networkx as nx
 
-OUTPUT_PATH = "output.json.gz"
-ORIGINAL_PATH = "trimmed_input.xes.gz"
+OUTPUT_PATH = "output.json"
+ORIGINAL_PATH = "trimmed_input.xes"
 
 dirname = os.path.dirname(__file__)
-<<<<<<< HEAD
-dataset_folder = "Road Traffic Fine Management Process_1_all"
-dataset_filename = "Road_Traffic_Fine_Management_Process.xes.gz"
-rel_path = os.path.join(dirname, 'Datasets', dataset_folder, dataset_filename)
-=======
-var = 'G1'   # change this variable to match the dataset used
+var = 'A'   # change this variable to match the dataset used
 dataset_folder = {
     'A': "Sepsis Cases - Event Log_1_all",
     'B': "Road Traffic Fine Management Process_1_all",
@@ -38,7 +33,6 @@ dataset_filename = {
     'G5': "PermitLog.xes.gz"
 }
 rel_path = os.path.join(dirname, 'Datasets', dataset_folder[var], dataset_filename[var])
->>>>>>> 8bbc6bd3c2c0e79cca2d063d615cc3dc7f3522e6
 
 # ORIGINAL_PATH = rel_path 
 
