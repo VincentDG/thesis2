@@ -1,4 +1,4 @@
-narwhals==2.17.0
-networkx==3.6.1
-packaging==26.0
-plotly==6.6.0
+narwhals
+networkx
+packaging
+plotly
