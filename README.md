@@ -8,11 +8,11 @@ The poset cover-based event log compressor are scripts for performing poset cove
 ## Setup Instructions (as of 6/9/2026)
 1. Clone the repository
 
-`git clone https://github.com/VincentDG/event-log-poset-compression`
+```git clone https://github.com/VincentDG/event-log-poset-compression```
 
 2. Install dependencies
 
-`pip install -r requirements.txt`
+```pip install -r requirements.txt```
 
 3. Select dataset by editing `parser.py`
 - If you have Datasets.zip, please extract it on the root folder and proceed to step 4.
@@ -24,7 +24,7 @@ The poset cover-based event log compressor are scripts for performing poset cove
 
 5. Run `parser.py`
 
-`python3.12 parser.py`
+```python3.12 parser.py```
 
 6. Check for results for filesizes can be checked using File Explorer.
 
