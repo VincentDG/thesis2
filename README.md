@@ -15,16 +15,15 @@ The poset cover-based event log compressor are scripts for performing poset cove
 
 2. Install dependencies
     ```
+    cd eventlog-poset-compression
     python3.12 -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
     ```
 
 3. Select dataset by editing `parser.py`
-    - If you have Datasets.zip, please extract it on the root folder and proceed to step 4.
+    - If you have `Datasets.zip`, please extract it on the root folder and proceed to step 4.
     - Otherwise, create a folder named `Datasets` on the root folder.
-    - Add the dataset folder and on dataset filename on the dictionary in `parser.py`.
-<br>
 
 4. Change `parser.py` parameters
     - On `parser.py`, change the value of `var` to the dataset to be compressed.
@@ -35,16 +34,23 @@ The poset cover-based event log compressor are scripts for performing poset cove
 5. Run `parser.py`
 
     ```
-    python3.12 parser.py
+    python parser.py
     ```
 
-6. Check for results for filesizes can be checked using File Explorer.
-   - The modified XES file is located in `trimmed_input.xes.gz`.
-   - The resulting compressed JSON file is located in `output.json.gz`.
+6. Extract `trimmed_input.xes.gz` and `output.json.gz`.
+   - Modified XES file: `trimmed_input.xes.gz`.
+   - Poset compression output:  `output.json.gz`. (Keep the .GZ file)
+<br>
 
-7. Extract `trimmed_input.xes.gz` and `output.json.gz` to the root folder.
-   
+7. Verify filesize results of `trimmed_input.xes` and `output.json` using operating system's file explorer.
+<br>
+
 8. Run `evaluation.py`. <br>
    - Please ensure that `var` is the same as the one used in `parser.py`.
-   - Here, the decompression time and correctness can be verified.
+
+       ```
+       python evaluation.py
+       ```
+   
+   - Verify decompression time and correctness here. 
 
