@@ -9,6 +9,9 @@
 /a.txt
 /datasets
 /parser_stable.py
+/results
+/log.txt
 *.pyc
 *.zip
 *.zip
+parser.batch

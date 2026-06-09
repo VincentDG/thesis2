@@ -11,23 +11,19 @@ from imports.app.posetutils import PosetUtils
 import json
 import time
 
-# t0 = time.perf_counter()
-# print("Breakpoint A")
-
-
-# t1 = time.perf_counter()
-# print(f"Breakpoint B - {t1-t0:.2f}s")
-
+t0 = time.perf_counter()
+print("Breakpoint A")
 
 # This section of the code deals with relative file paths
 dirname = os.path.dirname(__file__)
-var = 'G1'   # change this variable to match the dataset used
+var = 'G5'  # change this variable to match the dataset used
 dataset_folder = {
     'A': "Sepsis Cases - Event Log_1_all",
     'B': "Road Traffic Fine Management Process_1_all",
+    'C': "Hospital Billing - Event Log_1_all",
     'D': "BPI Challenge 2017_1_all",
     'E': "BPI Challenge 2018_1_all",
-    'F': "BPI Challenge 2019",
+    'F': "BPI_Challenge_2019",
     'G1': "BPI Challenge 2020_ Domestic Declarations_1_all",
     'G2': "BPI Challenge 2020_ International Declarations_1_all",
     'G3': "BPI Challenge 2020_ Prepaid Travel Costs_1_all",
@@ -38,10 +34,11 @@ dataset_folder = {
 dataset_filename = {
     'A': "Sepsis Cases - Event Log.xes.gz",
     'B': "Road_Traffic_Fine_Management_Process.xes.gz",
+    'C': "Hospital Billing - Event Log.xes.gz",
     'D': "BPI Challenge 2017.xes.gz",
     'E': "BPI Challenge 2018.xes.gz",
     'F': "BPI_Challenge_2019.xes",
-    'G1': "DomesticDeclarations.xes.gz",
+    'G1': "DomesticDeclarations.xes",
     'G2': "InternationalDeclarations.xes.gz",
     'G3': "PrepaidTravelCost.xes.gz",
     'G4': "RequestForPayment.xes.gz",
@@ -52,7 +49,9 @@ rel_path = os.path.join(dirname, 'Datasets', dataset_folder[var], dataset_filena
 
 # This section of the code decompresses datasets compressed with Gzip into XES files
 # The previous code was optimized to skip file decompression to disk and just reads the contents of the .gz file.
-if var == 'F':
+unzipped = ['F', 'G1']
+
+if var in unzipped:
     with open(rel_path, 'rt') as f:
         contents = f.read()
 
@@ -299,8 +298,16 @@ for concurrency in concurrency_list:
 
 print("Number of generated permutations:", l)
 
+# Trace prints after permutations
+linear_order_count = 0
+for group in grouped_linear_orders:
+    for trace in group:
+        linear_order_count += 1
+
+print("Trace counts (filtered + extended): ", linear_order_count)
+
 # This section of the code is for solving each instance of the poset cover problem
-THRESHOLD = 20 # to be decided
+# THRESHOLD = 20 # to be decided
 
 hasse_diagram_list = []
 total_groups = len(grouped_linear_orders)
@@ -437,3 +444,6 @@ with gzip.open(trimmed_xes_path, 'wt', encoding='utf-8') as f:
     f.write(trimmed_xes)
 
 print(f"Trimmed dataset written to {trimmed_xes_path}")
+
+t1 = time.perf_counter()
+print(f"Breakpoint B - {t1-t0:.2f}s")
